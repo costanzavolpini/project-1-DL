@@ -23,9 +23,15 @@ class Data(object):
         """
         return self.train_input.clone().type(torch.FloatTensor), self.train_target.clone().type(torch.FloatTensor), self.train_classes.clone().type(torch.FloatTensor), self.test_input.clone().type(torch.FloatTensor), self.test_target.clone().type(torch.FloatTensor), self.test_classes.clone().type(torch.FloatTensor)
 
+    def get_data_3dCNN(self):
+        """
+        Return data as expected by a 3dCNN layer
+        """
+        return self.train_input.clone().type(torch.FloatTensor).unsqueeze(1), self.train_target.clone().type(torch.FloatTensor).unsqueeze(1), self.train_classes.clone().type(torch.FloatTensor), self.test_input.clone().type(torch.FloatTensor).unsqueeze(1), self.test_target.clone().type(torch.FloatTensor).unsqueeze(1), self.test_classes.clone().type(torch.FloatTensor)
+
     def get_data_flatten(self):
         """
         Return data as float with inputs flatten
         """
         self.flat_input()
-        return self.test_input_flatten.clone().type(torch.FloatTensor), self.train_target.clone().type(torch.FloatTensor), self.train_classes.clone().type(torch.FloatTensor), self.test_input_flatten.clone().type(torch.FloatTensor), self.test_target.clone().type(torch.FloatTensor), self.test_classes.clone().type(torch.FloatTensor)
+        return self.test_input_flatten.clone().type(torch.FloatTensor), self.train_target.clone().type(torch.FloatTensor).unsqueeze(1), self.train_classes.clone().type(torch.FloatTensor), self.test_input_flatten.clone().type(torch.FloatTensor), self.test_target.clone().type(torch.FloatTensor).unsqueeze(1), self.test_classes.clone().type(torch.FloatTensor)

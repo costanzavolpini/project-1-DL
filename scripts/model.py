@@ -35,35 +35,42 @@ class Model(nn.Module):
             epochs: int,
             doPrint: bool (if true it prints the epochs with loss and accuracy)
         """
-        # self.train()
+        if doPrint:
+            p = Print(self) #self is the model
+
+        def get_loss_acc(input_, target):
+            pred = self(input_)
+            loss = self.criterion(pred, target) # apply loss (i.e. MSE)
+            acc = compute_accuracy(pred, target) # compute accuracy
+            return loss, acc
 
         for e in range(1, epochs + 1):
 
             self.optimizer.zero_grad()
 
-            train_pred = self(train_input) # return predicted value (forward method of subclass model)
-            train_loss = self.criterion(train_pred, train_target) # apply loss (i.e. MSE)
+            # return predicted value (forward method of subclass model)
+            train_loss, train_acc = get_loss_acc(train_input, train_target)
 
             train_loss.backward() # backward propagation of grads
             self.optimizer.step() # update params
-            train_loss = train_loss.item() # get value
-            train_acc = compute_accuracy(train_pred, train_target) # compute accuracy
 
+            # NOTE: train loss and accuracy have been computed before the train step, test loss and accuracy after it
             test_acc = None
             test_loss = None
-
             # do the same with test if it is passed and overwrite test_acc and test_loss
             if test_input is not None:
-                test_pred = self(test_input)
-                test_loss = self.criterion(test_pred, test_target).item()
-                test_acc = compute_accuracy(test_pred, test_target)
+                test_loss, test_acc = get_loss_acc(test_input, test_target)
 
             # add epoch to history saving new values
-            self.history.epoch(train_loss=train_loss, train_acc=train_acc, test_loss=test_loss, test_acc=test_acc)
+            self.history.epoch(
+                train_loss=train_loss.item(), train_acc=train_acc,
+                test_loss=test_loss.item(), test_acc=test_acc
+            )
+
+
 
             # ----- print all the information
             if doPrint:
-                p = Print(self) #self is the model
                 p()
 
         return self
@@ -89,7 +96,7 @@ def compute_accuracy(y_pred, y_target):
     Just take first value in y_pred.
     """
     y_pred = y_pred.clone()
-    y_pred = y_pred[:, 0] #shape [1000, 1]
+    # y_pred = y_pred[:, 0] #shape [1000, 1]
     y_pred[y_pred>0.5] = 1
     y_pred[y_pred<=0.5] = 0
     acc = 100 * ((y_pred == y_target).sum().type(torch.FloatTensor).item())
