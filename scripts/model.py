@@ -67,8 +67,6 @@ class Model(nn.Module):
                 test_loss=test_loss.item(), test_acc=test_acc
             )
 
-
-
             # ----- print all the information
             if doPrint:
                 p()

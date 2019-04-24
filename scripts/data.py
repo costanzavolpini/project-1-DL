@@ -27,6 +27,7 @@ class Data(object):
         """
         Return data as expected by a 3dCNN layer
         """
+        # unsqueeze: add a dimension, example: (n, d) become (n, d, 1) with unsqueeze(2)
         return self.train_input.clone().type(torch.FloatTensor).unsqueeze(1), self.train_target.clone().type(torch.FloatTensor).unsqueeze(1), self.train_classes.clone().type(torch.FloatTensor), self.test_input.clone().type(torch.FloatTensor).unsqueeze(1), self.test_target.clone().type(torch.FloatTensor).unsqueeze(1), self.test_classes.clone().type(torch.FloatTensor)
 
     def get_data_flatten(self):

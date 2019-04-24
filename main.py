@@ -1,43 +1,33 @@
 import torch
-from torch import nn
-from torch import optim
-import torch.nn.functional as F
-from scripts.model import Model
 from scripts.data import Data
+from scripts.models_implemented import *
+
+model = 6
 
 ################### GENERATE DATASETS ###################
 
 d = Data()
-train_input, train_target, train_classes, test_input, test_target, test_classes = d.get_data_flatten()
+
+train_input = None
+train_target = None
+train_classes = None
+test_input = None
+test_target = None
+test_classes = None
+
+if model == 5 or model == 6:
+    train_input, train_target, train_classes, test_input, test_target, test_classes = d.get_data_3dCNN()
+else:
+    train_input, train_target, train_classes, test_input, test_target, test_classes = d.get_data_flatten()
 
 #########################################################
-model = 5
+
+#TODO: cross validation to find best parameters
+# Adam’s method considered as a method of Stochastic Optimization is a technique implementing adaptive learning rate. Whereas in normal SGD the learning rate has an equivalent type of effect for all the weights/parameters of the model.
 
 ###################### 1. LINEAR MODEL #####################
 if(model == 1):
-    # Give weight to each pixel (this weight is taken from gradient descent)
-    class LinearRegression(Model):
-
-        def __init__(self, features_in=392, features_out=1, optimizer=optim.SGD, criterion=nn.MSELoss, learning_rate=1e-8):
-            super(LinearRegression, self).__init__()
-            self.init_params = {
-                'features_in': features_in,
-                'features_out': features_out,
-                'optimizer': optimizer,
-                'criterion': criterion,
-                'learning_rate': learning_rate
-            }
-            self.classifier = nn.Sequential(
-                nn.Linear(features_in, features_out)
-            )
-            self.optimizer = optimizer(self.parameters(), lr=learning_rate)
-            self.criterion = criterion()
-
-        def forward(self, x):
-
-            # flatten the features for the linear layer in the classifier
-            x = x.view(1000, -1)
-            return self.classifier(x) # return predicted value
+    torch.manual_seed(1)
 
     # Train the model
     model_linear = LinearRegression()
@@ -53,36 +43,14 @@ if(model == 1):
 
 #################### 2. LOGISTIC MODEL #####################
 elif(model == 2):
-    class LogisticRegression(Model):
-
-        def __init__(self, features_in=392, features_out=1, optimizer=optim.SGD, criterion=nn.MSELoss, learning_rate=1e-2):
-            super(LogisticRegression, self).__init__()
-            self.init_params = {
-                'features_in': features_in,
-                'features_out': features_out,
-                'optimizer': optimizer,
-                'criterion': criterion,
-                'learning_rate': learning_rate
-            }
-            self.classifier = nn.Sequential(
-                nn.Linear(features_in, features_out)
-            )
-            self.optimizer = optimizer(self.parameters(), lr=learning_rate)
-            self.criterion = criterion()
-
-        def forward(self, x):
-
-            # flatten the features for the linear layer in the classifier
-            x = x.view(1000, -1)
-            return F.sigmoid(self.classifier(x)) # return predicted value
-
     # Train the model
+    torch.manual_seed(1)
     model_logistic = LogisticRegression()
 
     model_logistic.fit(
         train_input, train_target,
         test_input, test_target,
-        epochs=50,
+        epochs=1000,
         doPrint=True
     )
 
@@ -94,73 +62,47 @@ elif(model == 3):
 
 ############## 4. NEURAL NET MODEL(2 LOSSES) ###############
 elif(model == 4):
+    # class NN2Losses(Model):
+
+    #     def __init__(...):
+    #         super(NN2Losses, self).__init__()
+    #         self.init_params = {
+    #             ...
+    #         }
+    #         self.feature_extractor = nn.Sequential(...)
+    #         # classificatore per >
+    #         self.classifier_bool = nn.Sequential(
+    #             nn.Linear(features_in, 1),
+    #             nn.Sigmoid()
+    #         )
+    #         # classificatore per le cifre
+    #         self.classifier_digit = nn.Sequential(
+    #             nn.Linear(features_in, 10)
+    #             nn.Sigmoid()
+    #         )
+    #         self.optimizer = optimizer(self.parameters(), lr=learning_rate)
+    #         def custom_criterion(train_pred, test_target):
+    #             bool_pred, left_digits_pred, right_digits_pred = train_pred
+    #             bool_target, left_digits_target, right_digits_target = train_target
+
+    #             bool_loss = criterion(bool_pred, bool_target)
+    #             left_digit_loss = criterion ...
+    #             right_digit_loss = criterion ...
+    #             return bool_loss + left_digit_loss + right_digit_loss # volendo le puoi anche pesare dando più peso a bool_loss (10*bool_loss + 1*left_digit_loss c+ 1*right_digit_loss)
+    #         self.criterion = custom_criterion
+
+    #     def forward(self, x):
+    #         features = self.feature_extractor(x)
+    #         return self.classifier_bool(features), self.classifier_digit(x[prime immagini]), self.classifier_digit(x[seconde immagini]) # return predicted values
+
+    # todo: preparare i target come tupla (target booleano di shape=(N, 1), target left digit di shape=(N, 10), target right digit di shape=(N, 10))
     print("eh")
 ############ 5. CONVOLUTIONAL NEURAL NETWORK ###############
 elif(model == 5):
-#     # add padding to keep input dimensions
-#     a = nn.Conv3d(1, 32, kernel_size=(1, 3, 3), padding=(0, 1, 1))
-
-#     # simply add another dimension (as expected from Conv3d)
-#     X = train_input.unsqueeze(1)
-#     # a(X).shape --> 32 filters => in the second dimensions we have 32 "strati" ognuno calcolato da un filtro
-
-    class CNNModel1Loss(Model):
-        """
-        Predicts whether the first image is <= than the second. Only one loss can be applied to the output of this model.
-        Input: (N, 2, 14, 14)
-        Output: (N, 1)
-        """
-        def __init__(self,
-            # cambia output_size per decidere quante classi vuoi in output. Per l'altro modello con 2 losses
-            # passare semplicemente output_size=21 invece che implementare un altra classe
-            output_size=1, optimizer = torch.optim.Adam, criterion = torch.nn.MSELoss):
-
-            super(CNNModel1Loss, self).__init__()
-
-            self.init_params = {
-                'optimizer': optimizer,
-                'criterion': criterion
-            }
-
-            self.feature_extractor = nn.Sequential(
-                nn.BatchNorm3d(1),
-
-                nn.Conv3d(1, 32, kernel_size=(1, 5, 5), padding=(0, 2, 2)),
-                nn.ReLU(),
-                nn.BatchNorm3d(32),
-
-                nn.Conv3d(32, 16, kernel_size=(1, 3, 3), padding=(0, 1, 1)),
-                nn.ReLU(),
-                nn.BatchNorm3d(16),
-
-                nn.Conv3d(16, 8, kernel_size=(1, 3, 3), padding=(0, 1, 1), stride=(1, 2, 2)),
-                nn.ReLU(),
-                nn.BatchNorm3d(8),
-            )
-
-            self.classifier = nn.Sequential(
-                nn.Linear(8 * 2 * 7 * 7, 256),
-                nn.ReLU(),
-                nn.Linear(256, output_size),
-                nn.Tanh() # or sigmoid (TODO: attenzione al target che dai durante il train con la sigmoid)
-            )
-
-            self.optimizer = optimizer(self.parameters())
-            self.criterion = criterion()
-
-        def forward(self, X):
-            if len(X.shape) == 4:
-                # Conv3d expects an input of shape (N, C_{in}, D, H, W)
-                X = X.unsqueeze(1)
-
-            features = self.feature_extractor(X)
-
-            # flatten the features for the linear layer in the classifier
-            features = features.view(1000, -1)
-            return self.classifier(features)
-
+    # add another dimension (as expected from Conv3d)
+    # X = train_input.unsqueeze(1)
+    # a(X).shape --> 32 filters => in the second dimensions we have 32 "layers" and each one is calculated by a filter
     model_cnn1 = CNNModel1Loss()
-
     model_cnn1.fit(
         train_input, train_target,
         test_input, test_target,
@@ -171,4 +113,13 @@ elif(model == 5):
     model_cnn1.plot_history()
 ############ 6. CONVOLUTIONAL NEURAL NETWORK (2 losses) ###############
 else:
-    print("best")
+    #TODO: normalize accuracy
+    model_cnn2 = CNNModel1Loss(output_size=21) #10 x 2 possible values (0 to 9) + 1 to check if image_1 <= image_2
+    model_cnn2.fit(
+        train_input, train_target,
+        test_input, test_target,
+        epochs=50,
+        doPrint=True
+    )
+
+    model_cnn2.plot_history()
