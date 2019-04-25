@@ -54,9 +54,10 @@ class Model(nn.Module):
             train_loss.backward() # backward propagation of grads
             self.optimizer.step() # update params
 
-            # NOTE: train loss and accuracy have been computed before the train step, test loss and accuracy after it
+            # train loss and accuracy have been computed before the train step, test loss and accuracy after it
             test_acc = None
             test_loss = None
+
             # do the same with test if it is passed and overwrite test_acc and test_loss
             if test_input is not None:
                 test_loss, test_acc = get_loss_acc(test_input, test_target)
@@ -67,14 +68,11 @@ class Model(nn.Module):
                 test_loss=test_loss.item(), test_acc=test_acc
             )
 
-            # ----- print all the information
+            # print all the information
             if doPrint:
                 p()
 
         return self
-
-    # def __hash__(self):
-    #         return id(self)
 
     def plot_history(self):
         """

@@ -24,7 +24,6 @@ class LinearRegression(Model):
         self.criterion = criterion()
 
     def forward(self, x):
-
         # flatten the features for the linear layer in the classifier
         x = x.view(1000, -1)
         return self.classifier(x) # return predicted value
@@ -48,7 +47,6 @@ class LogisticRegression(Model):
         self.criterion = criterion()
 
     def forward(self, x):
-
         # flatten the features for the linear layer in the classifier
         x = x.view(1000, -1)
         return F.sigmoid(self.classifier(x)) # return predicted value
