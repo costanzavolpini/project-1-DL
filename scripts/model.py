@@ -41,7 +41,7 @@ class Model(nn.Module):
         def get_loss_acc(input_, target):
             pred = self(input_)
             loss = self.criterion(pred, target) # apply loss (i.e. MSE)
-            acc = compute_accuracy(pred, target) # compute accuracy
+            acc = self.compute_accuracy(pred, target) # compute accuracy
             return loss, acc
 
         for e in range(1, epochs + 1):
@@ -86,20 +86,27 @@ class Model(nn.Module):
         plt.plot()
         plt.show()
 
-################### HELPER FUNCTION ###################
+    def compute_accuracy(self, y_pred, y_target):
+        """
+        Function to compute accuracy.
+        Just take first value in y_pred.
+        """
+        y_pred = y_pred.clone()
+        y_pred[y_pred>0.5] = 1
+        y_pred[y_pred<=0.5] = 0
+        acc = 100 * ((y_pred == y_target).sum().type(torch.FloatTensor).item())
+        n = y_pred.shape[0]
+        return acc / n # normalize by divide by length (1000) -> same as mean
 
-def compute_accuracy(y_pred, y_target):
-    """
-    Function to compute accuracy.
-    Just take first value in y_pred.
-    """
-    y_pred = y_pred.clone()
-    # y_pred = y_pred[:, 0] #shape [1000, 1]
-    y_pred[y_pred>0.5] = 1
-    y_pred[y_pred<=0.5] = 0
-    acc = 100 * ((y_pred == y_target).sum().type(torch.FloatTensor).item())
-    n = y_pred.shape[0]
-    return acc / n # normalize by divide by length (1000) -> same as mean
+    def number_params(self, module=None):
+        """
+        Return the number of parameters of the model.
+        """
+        if module is None:
+            module = self
+        # p.numel() returns #entries (#parameters that define tensor p)
+        # p.requires_grad = p is part of neural network
+        return sum(p.numel() for p in module.parameters() if p.requires_grad)
 
 ##################### HISTORY CLASS #####################
 
@@ -184,6 +191,7 @@ class Print():
     def __call__(self):
         # compute how much time the epoch lasted
         h = self.model.history
+
         # compute epochs num
         curr_epoch = str(h.epochs)
 

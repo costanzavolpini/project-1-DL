@@ -8,6 +8,9 @@ model = 6
 
 d = Data()
 
+#TODO: for 1 to 10 of seed and to plotbox per far vedere outliers
+#TODO: fare tabella con num_params per ogni modello
+
 train_input = None
 train_target = None
 train_classes = None
@@ -91,6 +94,8 @@ elif(model == 4):
     #             return bool_loss + left_digit_loss + right_digit_loss # volendo le puoi anche pesare dando più peso a bool_loss (10*bool_loss + 1*left_digit_loss c+ 1*right_digit_loss)
     #         self.criterion = custom_criterion
 
+#            def compute_accuracy() -> quanto predice bene i digit e quanto il task (img1 < img2)
+
     #     def forward(self, x):
     #         features = self.feature_extractor(x)
     #         return self.classifier_bool(features), self.classifier_digit(x[prime immagini]), self.classifier_digit(x[seconde immagini]) # return predicted values
@@ -103,6 +108,11 @@ elif(model == 5):
     # X = train_input.unsqueeze(1)
     # a(X).shape --> 32 filters => in the second dimensions we have 32 "layers" and each one is calculated by a filter
     model_cnn1 = CNNModel1Loss()
+
+    print("Number of parameters: {}".format(model_cnn1.number_params()))
+    print("Number of parameters of feature_extractor: {}".format(model_cnn1.number_params(model_cnn1.feature_extractor)))
+    print("Number of parameters of classifier: {}".format(model_cnn1.number_params(model_cnn1.classifier)))
+
     model_cnn1.fit(
         train_input, train_target,
         test_input, test_target,
@@ -111,13 +121,17 @@ elif(model == 5):
     )
 
     model_cnn1.plot_history()
+
 ############ 6. CONVOLUTIONAL NEURAL NETWORK (2 losses) ###############
 else:
-    #TODO: normalize accuracy
-    model_cnn2 = CNNModel1Loss(output_size=21) #10 x 2 possible values (0 to 9) + 1 to check if image_1 <= image_2
+    model_cnn2 = CNNModel2Loss()
+    print("Number of parameters: {}".format(model_cnn2.number_params()))
+    print("Number of parameters of feature_extractor: {}".format(model_cnn2.number_params(model_cnn2.feature_extractor)))
+    print("Number of parameters of classifier: {}".format(model_cnn2.number_params(model_cnn2.classifier_bool)))
+
     model_cnn2.fit(
-        train_input, train_target,
-        test_input, test_target,
+        train_input, (train_target, train_classes[:, 0], train_classes[:, 1]),
+        test_input, (test_target, test_classes[:, 0], test_classes[:, 1]),
         epochs=50,
         doPrint=True
     )
