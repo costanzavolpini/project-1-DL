@@ -158,7 +158,7 @@ class CNNModel2Loss(Model):
                 # 7 x 7 instead of 14 x 14 as size of the image because we have applied a stride
                 nn.Linear(8 * 2 * 7 * 7, 32),
                 nn.ReLU(),
-                nn.Linear(32, output_size),
+                nn.Linear(32, 1),
                 nn.Tanh() # or sigmoid (TODO: attenzione al target durante il train con la sigmoid)
             )
 
@@ -171,7 +171,7 @@ class CNNModel2Loss(Model):
 
             self.optimizer = optimizer(self.parameters())
             self.criterion = self.custom_criterion
-            self.loss_criterion = criterion
+            self.loss_criterion = criterion()
 
         def custom_criterion(self, train_pred, train_target):
                 """
@@ -181,14 +181,10 @@ class CNNModel2Loss(Model):
                 bool_pred, digit_pred1, digit_pred2 = train_pred
                 bool_target, digit_target1, digit_target2 = train_target
 
-                print(digit_pred1)
-                #TODO: digit_pred1 is not just a value, should I pick classes with 1?
-
                 bool_loss = self.loss_criterion(bool_pred, bool_target)
                 digit_loss1 = self.loss_criterion(digit_pred1, digit_target1)
-                digit_loss2 = self.loss_criterion(digit_pred2, digit_target2)
 
-                print(10*bool_loss + digit_loss1 + digit_loss2)
+                digit_loss2 = self.loss_criterion(digit_pred2, digit_target2)
 
                 return 10*bool_loss + digit_loss1 + digit_loss2 # give more weight to bool_loss (10*bool_loss + 1*digit_loss1 + 1*digit_loss2)
 

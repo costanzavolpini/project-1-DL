@@ -129,9 +129,14 @@ else:
     print("Number of parameters of feature_extractor: {}".format(model_cnn2.number_params(model_cnn2.feature_extractor)))
     print("Number of parameters of classifier: {}".format(model_cnn2.number_params(model_cnn2.classifier_bool)))
 
+    train_classes_img1 = d.transform_one_hot_encoding(train_classes[:, 0])
+    train_classes_img2 = d.transform_one_hot_encoding(train_classes[:, 1])
+    test_classes_img1 = d.transform_one_hot_encoding(test_classes[:, 0])
+    test_classes_img2 = d.transform_one_hot_encoding(test_classes[:, 1])
+
     model_cnn2.fit(
-        train_input, (train_target, train_classes[:, 0], train_classes[:, 1]),
-        test_input, (test_target, test_classes[:, 0], test_classes[:, 1]),
+        train_input, (train_target, train_classes_img1, train_classes_img2),
+        test_input, (test_target, test_classes_img1, test_classes_img2),
         epochs=50,
         doPrint=True
     )
