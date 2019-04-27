@@ -2,14 +2,14 @@ import torch
 from scripts.data import Data
 from scripts.models_implemented import *
 
-model = 6
+model = 4
 
 ################### GENERATE DATASETS ###################
 
 d = Data()
 
-#TODO: for 1 to 10 of seed and to plotbox per far vedere outliers
-#TODO: fare tabella con num_params per ogni modello
+#TODO: (REPORT) for 1 to 10 of seed and to plotbox per far vedere outliers
+#TODO: (REPORT) fare tabella con num_params per ogni modello
 
 train_input = None
 train_target = None
@@ -18,9 +18,11 @@ test_input = None
 test_target = None
 test_classes = None
 
-if model == 5 or model == 6:
+if model == 5 or model == 6: # get 3d images
     train_input, train_target, train_classes, test_input, test_target, test_classes = d.get_data_3dCNN()
-else:
+elif model == 4: #get image in 2d
+    train_input, train_target, train_classes, test_input, test_target, test_classes = d.get_data_2dCNN()
+else: # append img 1 and 2
     train_input, train_target, train_classes, test_input, test_target, test_classes = d.get_data_flatten()
 
 #########################################################
@@ -39,6 +41,7 @@ if(model == 1):
         train_input, train_target,
         test_input, test_target,
         epochs=50,
+        batch_size=1000, #so fast that batch does not make sense to use batch
         doPrint=True
     )
 
@@ -54,6 +57,7 @@ elif(model == 2):
         train_input, train_target,
         test_input, test_target,
         epochs=1000,
+        batch_size=1000, #so fast that batch does not make sense to use batch
         doPrint=True
     )
 
@@ -61,47 +65,44 @@ elif(model == 2):
 
 ################## 3. NEURAL NET MODEL #####################
 elif(model == 3):
-    print("eh")
+    model_nn1 = NNModel1Loss()
+
+    print("Number of parameters: {}".format(model_nn1.number_params()))
+    print("Number of parameters of feature_extractor: {}".format(model_nn1.number_params(model_nn1.feature_extractor)))
+    print("Number of parameters of classifier: {}".format(model_nn1.number_params(model_nn1.classifier)))
+
+    model_nn1.fit(
+        train_input, train_target,
+        test_input, test_target,
+        epochs=50,
+        batch_size=1000, #so fast that batch does not make sense to use batch
+        doPrint=True
+    )
+
+    model_nn1.plot_history()
 
 ############## 4. NEURAL NET MODEL(2 LOSSES) ###############
 elif(model == 4):
-    # class NN2Losses(Model):
+    model_nn2 = NNModel2Loss()
+    print("Number of parameters: {}".format(model_nn2.number_params()))
+    print("Number of parameters of feature_extractor: {}".format(model_nn2.number_params(model_nn2.feature_extractor)))
+    print("Number of parameters of classifier: {}".format(model_nn2.number_params(model_nn2.classifier_bool)))
 
-    #     def __init__(...):
-    #         super(NN2Losses, self).__init__()
-    #         self.init_params = {
-    #             ...
-    #         }
-    #         self.feature_extractor = nn.Sequential(...)
-    #         # classificatore per >
-    #         self.classifier_bool = nn.Sequential(
-    #             nn.Linear(features_in, 1),
-    #             nn.Sigmoid()
-    #         )
-    #         # classificatore per le cifre
-    #         self.classifier_digit = nn.Sequential(
-    #             nn.Linear(features_in, 10)
-    #             nn.Sigmoid()
-    #         )
-    #         self.optimizer = optimizer(self.parameters(), lr=learning_rate)
-    #         def custom_criterion(train_pred, test_target):
-    #             bool_pred, left_digits_pred, right_digits_pred = train_pred
-    #             bool_target, left_digits_target, right_digits_target = train_target
+    train_classes_img1 = d.transform_one_hot_encoding(train_classes[:, 0])
+    train_classes_img2 = d.transform_one_hot_encoding(train_classes[:, 1])
+    test_classes_img1 = d.transform_one_hot_encoding(test_classes[:, 0])
+    test_classes_img2 = d.transform_one_hot_encoding(test_classes[:, 1])
 
-    #             bool_loss = criterion(bool_pred, bool_target)
-    #             left_digit_loss = criterion ...
-    #             right_digit_loss = criterion ...
-    #             return bool_loss + left_digit_loss + right_digit_loss # volendo le puoi anche pesare dando più peso a bool_loss (10*bool_loss + 1*left_digit_loss c+ 1*right_digit_loss)
-    #         self.criterion = custom_criterion
+    model_nn2.fit(
+        train_input, (train_target, train_classes_img1, train_classes_img2),
+        test_input, (test_target, test_classes_img1, test_classes_img2),
+        epochs=50,
+        batch_size=1000, #so fast that batch does not make sense to use batch
+        doPrint=True
+    )
 
-#            def compute_accuracy() -> quanto predice bene i digit e quanto il task (img1 < img2)
+    model_nn2.plot_history()
 
-    #     def forward(self, x):
-    #         features = self.feature_extractor(x)
-    #         return self.classifier_bool(features), self.classifier_digit(x[prime immagini]), self.classifier_digit(x[seconde immagini]) # return predicted values
-
-    # todo: preparare i target come tupla (target booleano di shape=(N, 1), target left digit di shape=(N, 10), target right digit di shape=(N, 10))
-    print("eh")
 ############ 5. CONVOLUTIONAL NEURAL NETWORK ###############
 elif(model == 5):
     # add another dimension (as expected from Conv3d)

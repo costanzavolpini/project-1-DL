@@ -24,7 +24,7 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.history = History()
 
-    def fit(self, train_input, train_target, test_input = None, test_target = None, epochs = 25, doPrint=True):
+    def fit(self, train_input, train_target, test_input = None, test_target = None, epochs = 25, batch_size=25, doPrint=True):
         """
         Fit the model on the training data.
         Inputs:
@@ -33,6 +33,7 @@ class Model(nn.Module):
             test_input: test data if any
             test_target: test target data if any
             epochs: int,
+            batch_size: int,
             doPrint: bool (if true it prints the epochs with loss and accuracy)
         """
         if doPrint:
@@ -45,16 +46,34 @@ class Model(nn.Module):
             return loss, acc
 
         for e in range(1, epochs + 1):
+            # shuffle the train set to select different batches at each epoch
+            indices_shuffled = torch.randperm(train_input.shape[0])
+            train_input = train_input[indices_shuffled]
+            if isinstance(train_target, tuple): #bool, digit1, digit2 -> take corresponding in each target
+                train_target = tuple(t[indices_shuffled] for t in train_target)
+            else:
+                train_target = train_target[indices_shuffled]
 
-            self.optimizer.zero_grad()
+            # iterate over the batches
+            for batch_start in range(0, train_input.shape[0], batch_size):
+                # get the current batch from the trainset
+                batch_end = batch_start + batch_size
+                train_input_batch = train_input[batch_start:batch_end]
+                if isinstance(train_target, tuple):
+                    train_target_batch = tuple(t[batch_start:batch_end] for t in train_target)
+                else:
+                    train_target_batch = train_target[batch_start:batch_end]
 
-            # return predicted value (forward method of subclass model)
-            train_loss, train_acc = get_loss_acc(train_input, train_target)
+                # flush gradients before train step
+                self.optimizer.zero_grad()
 
-            train_loss.backward() # backward propagation of grads
-            self.optimizer.step() # update params
+                # return predicted value (forward method of subclass model)
+                train_loss, train_acc = get_loss_acc(train_input_batch, train_target_batch)
 
-            # train loss and accuracy have been computed before the train step, test loss and accuracy after it
+                train_loss.backward() # backward propagation of grads
+                self.optimizer.step() # update params
+
+            # Train loss and accuracy have been computed before the train step, test loss and accuracy after it
             test_acc = None
             test_loss = None
 
@@ -68,7 +87,7 @@ class Model(nn.Module):
                 test_loss=test_loss.item(), test_acc=test_acc
             )
 
-            # print all the information
+            # ----- print all the information
             if doPrint:
                 p()
 

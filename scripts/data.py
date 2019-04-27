@@ -30,6 +30,10 @@ class Data(object):
         # unsqueeze: add a dimension, example: (n, d) become (n, d, 1) with unsqueeze(2)
         return self.train_input.clone().type(torch.FloatTensor).unsqueeze(1), self.train_target.clone().type(torch.FloatTensor).unsqueeze(1), self.train_classes.clone().type(torch.FloatTensor), self.test_input.clone().type(torch.FloatTensor).unsqueeze(1), self.test_target.clone().type(torch.FloatTensor).unsqueeze(1), self.test_classes.clone().type(torch.FloatTensor)
 
+    def get_data_2dCNN(self):
+        train_input_temp, train_target, train_classes, test_input_temp, test_target, test_classes = self.get_data_3dCNN()
+        return train_input_temp.clone().reshape(train_input_temp.size(0), -1), train_target, train_classes, test_input_temp.clone().reshape(train_input_temp.size(0), -1), test_target, test_classes
+
     def get_data_flatten(self):
         """
         Return data as float with inputs flatten
