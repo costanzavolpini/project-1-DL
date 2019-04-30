@@ -2,7 +2,7 @@ import torch
 from scripts.data import Data
 from scripts.models_implemented import *
 
-model = 4
+model = 3
 
 ################### GENERATE DATASETS ###################
 
@@ -29,10 +29,14 @@ else: # append img 1 and 2
 
 ###################### 1. LINEAR MODEL #####################
 if(model == 1):
-    torch.manual_seed(1)
+    # torch.manual_seed(1)
 
     # Train the model
     model_linear = LinearRegression()
+
+    print("Number of parameters: {}".format(model_linear.number_params()))
+    print("Number of parameters of feature_extractor: /")
+    print("Number of parameters of classifier: {}".format(model_linear.number_params(model_linear.classifier)))
 
     model_linear.fit(
         train_input, train_target,
@@ -47,8 +51,12 @@ if(model == 1):
 #################### 2. LOGISTIC MODEL #####################
 elif(model == 2):
     # Train the model
-    torch.manual_seed(1)
+    # torch.manual_seed(1)
     model_logistic = LogisticRegression()
+
+    print("Number of parameters: {}".format(model_logistic.number_params()))
+    print("Number of parameters of feature_extractor: /")
+    print("Number of parameters of classifier: {}".format(model_logistic.number_params(model_logistic.classifier)))
 
     model_logistic.fit(
         train_input, train_target,

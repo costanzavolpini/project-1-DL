@@ -106,6 +106,7 @@ Linear Regression has a strange behavior due to the fact that it has not have a 
 We have implemented two models for the neural network, the first one with 1 loss and the second one with 2 losses, as showed in Fig. \ref{fig:nn1} and Fig. \ref{fig:nn2}. Both models use the same feature extractors but they differs for the classifier. The first one has a boolean classifier that returns 1 if the first image is smaller then the second one. The second model, it has also a digit classifier that returns the corresponding digit for both the handwritten images (we have used an hot encoding to give a target to each node).
 %check se img1 < img2 o se era l'inverso!
 For these two models the images inputs are passed as 2D images.  Since the feature extractor processes both images together (it does not consider the two images independently), we can use a digit classifier with $20$ nodes as output ($10$ nodes for each images; i.e. from $0$ to $9$ as value of digit). We were expected to have a better result using 2 losses; but since it is a model with just linear layers we could have improved the computation considering both the images independently; we have then decided to try with a convolutional neural network, since \textit{conv3d} allow to automatically process both the images independently. We have observed that two losses could improve the accuracy if the model is more complex, otherwise it would affect negatively the accuracy (as in our case).
+%TODO: aggiungere 2 img
 
 % Aggiungere un preprocessing step (flatten nel caso delle reti basate sui layer lineari e niente nel caso della rete conv3d)
 
@@ -114,14 +115,40 @@ For these two models the images inputs are passed as 2D images.  Since the featu
 Two models of convolutional neural networks were trained, both received as input 3D images since we have decided to use a \textit{conv3d}. Conv3d are powerful cnn filter that are able to traverse the image in \textit{x}, \textit{y} and \textit{z} axes; that make possible to process both the two images in a independent way. CNN are powerfull since they use pixel locality, then instead of flatting the input as done in previous model we can just consider the 3D raw images. As done, in Sec. \ref{sec:nnmodel} we have decided to compare two models, one with one loss and the other one with two losses, as done with Neural Network models. 
 %AGGIUNGERE COMPARAZIONE PER DIRE QUALE DEI DUE MODELLI É STATO MEGLIO
 We have used the dropout to generalize better and then obtain a more robust model.
+%TODO: aggiungere 2 img
 
 \section{Comparison of models}
 \label{sec:comparison}
 Since linear models are really sensible to the weights setting 
 we have decided to use a unique seed to compare the models.
+In Table \ref{table:params} we have %something.
 
 % #TODO: (REPORT) for 1 to 10 of seed and to plotbox per far vedere outliers --> pensare al codice
-% #TODO: (REPORT) fare tabella con num\_params per ogni modello
+
+\begin{table}
+\centering
+\caption{Table with number of parameters for each model.}
+\label{table:params}
+\begin{tabular}{|l|l|l|l|l|} 
+\cline{3-5}
+\multicolumn{1}{l}{} &                     & \multicolumn{3}{c|}{\textbf{Parameters}}          \\ 
+\cline{3-5}
+\multicolumn{1}{l}{} &                     & Feature extractor & Classifier & Total   \\ 
+\hline
+                     & Linear Regression   & -                 & 393        & 393     \\ 
+\cline{2-5}
+               & Logistic Regression & -                 & 393        & 393     \\ 
+\cline{2-5}
+ \textbf{Models}   & NN (1 loss)~        & 133504            & 129        & 133633  \\ 
+\cline{2-5}
+                     & NN (2 losses)~      & 133504            & 129        & 136213  \\ 
+\cline{2-5}
+                     & CNN (1 loss)~       & 22650             & 25153      & 47803   \\ 
+\cline{2-5}
+                     & CNN (2 losses)      & 22650             & 25153      & 49773   \\
+\hline
+\end{tabular}
+\end{table}
 
 \section{Conclusion}
 \label{sec:conclusion}

@@ -14,8 +14,7 @@ class LinearRegression(Model):
             'features_in': features_in,
             'features_out': features_out,
             'optimizer': optimizer,
-            'criterion': criterion,
-            'learning_rate': learning_rate
+            'criterion': criterion
         }
         self.classifier = nn.Sequential(
             nn.Linear(features_in, features_out)
@@ -37,8 +36,7 @@ class LogisticRegression(Model):
             'features_in': features_in,
             'features_out': features_out,
             'optimizer': optimizer,
-            'criterion': criterion,
-            'learning_rate': learning_rate
+            'criterion': criterion
         }
         self.classifier = nn.Sequential(
             nn.Linear(features_in, features_out)
