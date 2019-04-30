@@ -8,9 +8,6 @@ model = 4
 
 d = Data()
 
-#TODO: (REPORT) for 1 to 10 of seed and to plotbox per far vedere outliers
-#TODO: (REPORT) fare tabella con num_params per ogni modello
-
 train_input = None
 train_target = None
 train_classes = None
@@ -27,8 +24,8 @@ else: # append img 1 and 2
 
 #########################################################
 
-#TODO: cross validation to find best parameters
-# Adam’s method considered as a method of Stochastic Optimization is a technique implementing adaptive learning rate. Whereas in normal SGD the learning rate has an equivalent type of effect for all the weights/parameters of the model.
+# Adam’s method considered as a method of Stochastic Optimization is a technique implementing adaptive learning rate.
+# Whereas in normal SGD the learning rate has an equivalent type of effect for all the weights/parameters of the model.
 
 ###################### 1. LINEAR MODEL #####################
 if(model == 1):

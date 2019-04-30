@@ -213,7 +213,7 @@ class CNNModel1Loss(Model):
             nn.Linear(8 * 2 * 7 * 7, 32),
             nn.ReLU(),
             nn.Linear(32, output_size),
-            nn.Sigmoid() # or sigmoid (TODO: attenzione al target durante il train con la sigmoid)
+            nn.Sigmoid()
         )
 
         self.optimizer = optimizer(self.parameters())

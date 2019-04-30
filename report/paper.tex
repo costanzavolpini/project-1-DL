@@ -54,6 +54,7 @@ We have started the project training simple linear models, in particular \textit
 In all the models, we have used \textit{Adam's method} instead of \textit{stochastic gradient descent} as optimizer since it use an adaptive learning rate (the learning rate of SGD has an equivalent type of effect for all the weights/parameters of the model \cite{reference0}).
 As criterion, we have used \textit{Mean Square Error} for all the models.
 
+For all the models we have explicitely separated in the code the feature extractor, used to process the input and extract high level features, from classifier(s), a simple linear layer that we have used to classify.
 
 Section \ref{sec:data} explain the structure of the dataset, Section \ref{sec:codestruc} describes briefly the content of each file. In Section \ref{sec:comparison}, \ref{sec:conclusion} we have showed the performance accuracy obtained by each model with a fixed seed, explaining why we got these results.
 
@@ -74,11 +75,16 @@ In this section contains the description of each file.
 
 \section{Linear Models}
 \label{sec:linearmodel}
-We have implemented \textit{Linear Regression} and \textit{Logistic Regression}. Regression is represented by a final layer that it is linear. In the logistic regression we have used a sigmoid as an activation function in the output layer. A linear layer accept as input a vector of values, that is the reason why we need to flat the input (the raw input is composed by 2D images). In fact a linear layer give a weight to each pixel, then it will accept a vector composed by N rows and D dimensions (columns), in our case it will have size $14 \times 14 \times 2$.
+We have implemented \textit{Linear Regression} and \textit{Logistic Regression}. Regression is represented by a final layer that it is linear. In the logistic regression we have used a sigmoid as an activation function in the output layer. A linear layer accept as input a vector of values, that is the reason why we need to flat the input (the raw input is composed by 2D images). In fact a linear layer give a weight to each pixel, then it will accept a vector composed by N rows and D dimensions (columns), in our case it will have size $14 \times 14 \times 2$. Linear layers bad generalize images, since it just memorize the train images, that causes a good train accuracy but a very low test accuracy.
 
-% CNN sfrutta localita pixel e le tratta come img - no flatten.
-
-% ASCOLTARE DA AUDIO 19 Aprile
+During the train of linear models we have noticed that sometimes the accuracy and loss could both decreases, that can happen if we have a case like the blue line in Fig. \ref{fig:lossacc}. 
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{lossacc.png}
+    \caption{Red line has an higher loss but a better accuracy. Instead, blue line has a lower loss but it predicts bad (lower accuracy). We can conclude saying that blue line fits well samples that already known.}
+    \label{fig:lossacc}
+\end{figure}
+Linear Regression has a strange behavior due to the fact that it has not have a sigmoid and the loss MSE works very bad in a classification task without mapping the value in a range.
 
 %TODO: mettere size flatted come input???
 \begin{figure}[!h]
@@ -97,15 +103,30 @@ We have implemented \textit{Linear Regression} and \textit{Logistic Regression}.
 
 \section{Neural Network Models}
 \label{sec:nnmodel}
+We have implemented two models for the neural network, the first one with 1 loss and the second one with 2 losses, as showed in Fig. \ref{fig:nn1} and Fig. \ref{fig:nn2}. Both models use the same feature extractors but they differs for the classifier. The first one has a boolean classifier that returns 1 if the first image is smaller then the second one. The second model, it has also a digit classifier that returns the corresponding digit for both the handwritten images (we have used an hot encoding to give a target to each node).
+%check se img1 < img2 o se era l'inverso!
+For these two models the images inputs are passed as 2D images.  Since the feature extractor processes both images together (it does not consider the two images independently), we can use a digit classifier with $20$ nodes as output ($10$ nodes for each images; i.e. from $0$ to $9$ as value of digit). We were expected to have a better result using 2 losses; but since it is a model with just linear layers we could have improved the computation considering both the images independently; we have then decided to try with a convolutional neural network, since \textit{conv3d} allow to automatically process both the images independently. We have observed that two losses could improve the accuracy if the model is more complex, otherwise it would affect negatively the accuracy (as in our case).
+
+% Aggiungere un preprocessing step (flatten nel caso delle reti basate sui layer lineari e niente nel caso della rete conv3d)
 
 \section{Convolutional Neural Network Models}
 \label{sec:cnnmodel}
+Two models of convolutional neural networks were trained, both received as input 3D images since we have decided to use a \textit{conv3d}. Conv3d are powerful cnn filter that are able to traverse the image in \textit{x}, \textit{y} and \textit{z} axes; that make possible to process both the two images in a independent way. CNN are powerfull since they use pixel locality, then instead of flatting the input as done in previous model we can just consider the 3D raw images. As done, in Sec. \ref{sec:nnmodel} we have decided to compare two models, one with one loss and the other one with two losses, as done with Neural Network models. 
+%AGGIUNGERE COMPARAZIONE PER DIRE QUALE DEI DUE MODELLI É STATO MEGLIO
+We have used the dropout to generalize better and then obtain a more robust model.
 
 \section{Comparison of models}
 \label{sec:comparison}
+Since linear models are really sensible to the weights setting 
+we have decided to use a unique seed to compare the models.
+
+% #TODO: (REPORT) for 1 to 10 of seed and to plotbox per far vedere outliers --> pensare al codice
+% #TODO: (REPORT) fare tabella con num\_params per ogni modello
 
 \section{Conclusion}
 \label{sec:conclusion}
+As future improvement we would like to implement the cross validation.
+%TODO: add
 % %%%%%%%%%%%%%%%%%%%%%
 
 
