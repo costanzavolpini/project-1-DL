@@ -13,9 +13,9 @@ class Data(object):
         """
         Flat the input (append images after one other)
         """
-        self.train_input_flatten = self.train_input.clone().reshape(self.train_input.size(0), -1)
-        self.test_input_flatten = self.test_input.clone().reshape(self.test_input.size(0), -1)
-        return self.train_input_flatten, self.test_input_flatten
+        train_input_flatten = self.train_input.clone().type(torch.FloatTensor).reshape(self.train_input.size(0), -1)
+        test_input_flatten = self.test_input.clone().type(torch.FloatTensor).reshape(self.test_input.size(0), -1)
+        return train_input_flatten, test_input_flatten
 
     def get_data(self):
         """
@@ -27,20 +27,46 @@ class Data(object):
         """
         Return data as expected by a 3dCNN layer
         """
-        # unsqueeze: add a dimension, example: (n, d) become (n, d, 1) with unsqueeze(2)
-        return self.train_input.clone().type(torch.FloatTensor).unsqueeze(1), self.train_target.clone().type(torch.FloatTensor).unsqueeze(1), self.train_classes.clone().type(torch.FloatTensor), self.test_input.clone().type(torch.FloatTensor).unsqueeze(1), self.test_target.clone().type(torch.FloatTensor).unsqueeze(1), self.test_classes.clone().type(torch.FloatTensor)
+        train_input, train_target, train_classes, test_input, test_target, test_classes = self.get_data()
+        train_input, train_target, test_input, test_target = train_input.unsqueeze(1), train_target.unsqueeze(1), test_input.unsqueeze(1), test_target.unsqueeze(1)
 
-    def get_data_2dCNN(self):
-        train_input_temp, train_target, train_classes, test_input_temp, test_target, test_classes = self.get_data_3dCNN()
-        return train_input_temp.clone().reshape(train_input_temp.size(0), -1), train_target, train_classes, test_input_temp.clone().reshape(train_input_temp.size(0), -1), test_target, test_classes
+        # unsqueeze: add a dimension, example: (n, d) become (n, d, 1) with unsqueeze(2)
+        return train_input, train_target, test_input, test_target
+
+    def get_data_3dCNN2Loss(self):
+        """
+        Return data as expected by a 3dCNN layer with 2 losses
+        """
+        train_input, train_target, train_classes, test_input, test_target, test_classes = self.get_data()
+        train_input, train_target, test_input, test_target = train_input.unsqueeze(1), train_target.unsqueeze(1), test_input.unsqueeze(1), test_target.unsqueeze(1)
+
+        train_classes_img1 = self.transform_one_hot_encoding(train_classes[:, 0])
+        train_classes_img2 = self.transform_one_hot_encoding(train_classes[:, 1])
+        test_classes_img1 = self.transform_one_hot_encoding(test_classes[:, 0])
+        test_classes_img2 = self.transform_one_hot_encoding(test_classes[:, 1])
+
+        train_target = (train_target, train_classes_img1, train_classes_img2)
+        test_target = (test_target, test_classes_img1, test_classes_img2)
+        return train_input, train_target, test_input, test_target
+
+    def get_data_NN2Loss(self):
+        # train_input, train_target, train_classes, test_input, test_target, test_classes = self.get_data()
+
+        train_input, train_target, test_input, test_target = self.get_data_3dCNN2Loss()
+        train_input = train_input.reshape(train_input.size(0), -1)
+        test_input = test_input.reshape(train_input.size(0), -1)
+        return train_input, train_target, test_input, test_target
 
     def get_data_flatten(self):
         """
         Return data as float with inputs flatten
         """
-        self.flat_input()
-        return self.test_input_flatten.clone().type(torch.FloatTensor), self.train_target.clone().type(torch.FloatTensor).unsqueeze(1), self.train_classes.clone().type(torch.FloatTensor), self.test_input_flatten.clone().type(torch.FloatTensor), self.test_target.clone().type(torch.FloatTensor).unsqueeze(1), self.test_classes.clone().type(torch.FloatTensor)
-
+        train_input, train_target, train_classes, test_input, test_target, test_classes = self.get_data()
+        train_input = train_input.reshape(self.train_input.size(0), -1)
+        test_input = test_input.reshape(self.test_input.size(0), -1)
+        train_target = train_target.unsqueeze(1)
+        test_target = test_target.unsqueeze(1)
+        return train_input, train_target, test_input, test_target
 
     def transform_one_hot_encoding(self, data):
         """

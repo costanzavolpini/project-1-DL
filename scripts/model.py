@@ -55,7 +55,11 @@ class Model(nn.Module):
                 train_target = train_target[indices_shuffled]
 
             # iterate over the batches
+            train_loss = 0
+            train_acc = 0
+            n_batches = 0
             for batch_start in range(0, train_input.shape[0], batch_size):
+                n_batches += 1
                 # get the current batch from the trainset
                 batch_end = batch_start + batch_size
                 train_input_batch = train_input[batch_start:batch_end]
@@ -68,10 +72,15 @@ class Model(nn.Module):
                 self.optimizer.zero_grad()
 
                 # return predicted value (forward method of subclass model)
-                train_loss, train_acc = get_loss_acc(train_input_batch, train_target_batch)
+                train_loss_batch, train_acc_batch = get_loss_acc(train_input_batch, train_target_batch)
+                train_loss += train_loss_batch.item()
+                train_acc += train_acc_batch
 
-                train_loss.backward() # backward propagation of grads
+                train_loss_batch.backward() # backward propagation of grads
                 self.optimizer.step() # update params
+            # do the average across batches
+            train_loss /= n_batches
+            train_acc /= n_batches
 
             # Train loss and accuracy have been computed before the train step, test loss and accuracy after it
             test_acc = None
@@ -80,11 +89,12 @@ class Model(nn.Module):
             # do the same with test if it is passed and overwrite test_acc and test_loss
             if test_input is not None:
                 test_loss, test_acc = get_loss_acc(test_input, test_target)
+                test_loss = test_loss.item()
 
             # add epoch to history saving new values
             self.history.epoch(
-                train_loss=train_loss.item(), train_acc=train_acc,
-                test_loss=test_loss.item(), test_acc=test_acc
+                train_loss=train_loss, train_acc=train_acc,
+                test_loss=test_loss, test_acc=test_acc
             )
 
             # ----- print all the information
@@ -92,6 +102,12 @@ class Model(nn.Module):
                 p()
 
         return self
+
+    def get_accuracy_train(self):
+        return self.history.get_accuracies_train()[-1]
+
+    def get_accuracy_test(self):
+        return self.history.get_accuracies_test()[-1]
 
     def plot_history(self):
         """
@@ -184,6 +200,12 @@ class History():
         Plot accuracies of train and test.
         """
         self.plot_general(self.test_acc, self.train_acc, 'Test accuracy', 'Train accuracy', 'accuracy', True)
+
+    def get_accuracies_train(self):
+        return self.train_acc
+
+    def get_accuracies_test(self):
+        return self.test_acc
 
 ################################### PRINT CLASS ###################################
 class Print():
