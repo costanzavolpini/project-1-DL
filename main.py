@@ -3,7 +3,7 @@ from scripts.data import Data
 from scripts.models_implemented import *
 
 # train the best model
-model = 6
+model = 4
 
 ################### GENERATE DATASETS ###################
 

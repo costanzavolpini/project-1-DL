@@ -95,6 +95,7 @@ Linear Regression has a strange behavior due to the fact that it has not have a 
     \label{fig:linearregression}
 \end{figure}
 
+%rifare img
 \begin{figure}[!h]
     \centering
     \includegraphics[width=0.4\textwidth]{logistic.png}
@@ -105,30 +106,23 @@ Linear Regression has a strange behavior due to the fact that it has not have a 
 \section{Neural Network Models}
 \label{sec:nnmodel}
 We have implemented two models for the neural network, the first one with 1 loss and the second one with 2 losses, as showed in Fig. \ref{fig:nn1} and Fig. \ref{fig:nn2}. Both models use the same feature extractors but they differs for the classifier. The first one has a boolean classifier that returns 1 if the first image is smaller then the second one. The second model, it has also a digit classifier that returns the corresponding digit for both the handwritten images (we have used an hot encoding to give a target to each node).
-For these two models the images inputs are passed as 2D images.  Since the feature extractor processes both images together (it does not consider the two images independently), we can use a digit classifier with $20$ nodes as output ($10$ nodes for each images; i.e. from $0$ to $9$ as value of digit). 
-% NN con 2 losses sembra meglio nel train!!
-% We were expected to have a better result using 2 losses; but since it is a model with just linear layers we could have improved the computation considering both the images independently; we have then decided to try with a convolutional neural network, since \textit{conv3d} allow to automatically process both the images independently. We have observed that two losses could improve the accuracy if the model is more complex, otherwise it would affect negatively the accuracy (as in our case).
+For these two models the images inputs are passed as 2D images.  Since the feature extractor processes both images together (it does not consider the two images independently), we can use a digit classifier with $20$ nodes as output ($10$ nodes for each images; i.e. from $0$ to $9$ as value of digit). We have noticed that NN with 2 losses seems to perform better during the cross validation but not in the test (see Table \ref{table:accuracy}). That seems to be in contrast with what we would expected; the cause could be found in the structure of the model, since we just have linear layers we could have improved the computation considering both the images independently. We have then decided to try with a convolutional neural network, since \textit{conv3d} allow to automatically process both the images independently. We have observed that two losses could improve the accuracy if the model is more complex, otherwise it would affect negatively the accuracy (as in our case).
 %TODO: aggiungere 2 img
 
 % Aggiungere un preprocessing step (flatten nel caso delle reti basate sui layer lineari e niente nel caso della rete conv3d)
-
-%UPDATE: 2 losses work better with NN but not with CNN!!!!!!!!!
 
 \section{Convolutional Neural Network Models}
 \label{sec:cnnmodel}
 Two models of convolutional neural networks were trained, both received as input 3D images since we have decided to use a \textit{conv3d}. Conv3d are powerful cnn filter that are able to traverse the image in \textit{x}, \textit{y} and \textit{z} axes; that make possible to process both the two images in a independent way. CNN are powerfull since they use pixel locality, then instead of flatting the input as done in previous model we can just consider the 3D raw images. As done, in Sec. \ref{sec:nnmodel} we have decided to compare two models, one with one loss and the other one with two losses, as done with Neural Network models. 
 %AGGIUNGERE COMPARAZIONE PER DIRE QUALE DEI DUE MODELLI É STATO MEGLIO
-We have used the dropout to generalize better and then obtain a more robust model.
+We have used the dropout to generalize better and then obtain a more robust model. CNN with 2 losses seems to return the best accuracy (see Table \ref{table:accuracy}).
 %TODO: aggiungere 2 img
 
 \section{Comparison of models}
 \label{sec:comparison}
 Since linear models are really sensible to the weights setting 
-we have decided to use a unique seed to compare the models.
-In Table \ref{table:params} we have %something.
-
-
-In the following plotboxs, it is possible to see the accuracies for each models (using cross validation). We can notice that the accuracy vary a lot in simple models since they highly depend from weights initialization.
+we have decided to use a cross validation to compare the models (however, we did not implement our cross validation with \textit{pytorch}, we have used the library \textit{sklearn}).
+Table \ref{table:params} summarizes all the number of parameters for each model. In the plotboxs (see Fig. \ref{fig:train_acc_box}), it is possible to see the accuracies for each models (using cross validation). We can notice that the accuracy vary a lot in simple models since they highly depend from weights initialization.
 
 \begin{figure}[!h]
     \centering
@@ -138,40 +132,63 @@ In the following plotboxs, it is possible to see the accuracies for each models 
 \end{figure}
 
 
-% Table accuracy, cross validation (numpy - mean +- std), test value
-
-
 \begin{table}
 \centering
 \caption{Table with number of parameters for each model.}
 \label{table:params}
-\begin{tabular}{|l|l|l|l|l|} 
-\cline{3-5}
-\multicolumn{1}{l}{} &                     & \multicolumn{3}{c|}{\textbf{Parameters}}          \\ 
-\cline{3-5}
-\multicolumn{1}{l}{} &                     & Feature extractor & Classifier & Total   \\ 
+\begin{tabular}{|l|l|l|} 
+\cline{3-3}
+\multicolumn{1}{l}{} &                     & \textbf{Parameters}  \\ 
+\cline{3-3}
 \hline
-                     & Linear Regression   & -                 & 393        & 393     \\ 
-\cline{2-5}
-               & Logistic Regression & -                 & 393        & 393     \\ 
-\cline{2-5}
- \textbf{Models}   & NN (1 loss)~        & 133504            & 129        & 133633  \\ 
-\cline{2-5}
-                     & NN (2 losses)~      & 133504            & 129        & 136213  \\ 
-\cline{2-5}
-                     & CNN (1 loss)~       & 22650             & 25153      & 47803   \\ 
-\cline{2-5}
-                     & CNN (2 losses)      & 22650             & 25153      & 49773   \\
+                     & Linear Regression  & 393     \\ 
+\cline{2-3}
+               & Logistic Regression & 393     \\ 
+\cline{2-3}
+ \textbf{Models}   & NN (1 loss)~        & 133633  \\ 
+\cline{2-3}
+                     & NN (2 losses)~      &  136213  \\ 
+\cline{2-3}
+                     & CNN (1 loss)~       & 47803   \\ 
+\cline{2-3}
+                     & CNN (2 losses)     & 49773   \\
+\hline
+\end{tabular}
+\end{table}
+
+Table \ref{table:accuracy} shows the comparison between the accuracy obtained during the cross validation and the one of test. We can notice that test accuracy got better scores because we have used a bigger dataset to train. The dataset used in cross validation was $4/5$ of the total train set, instead the one used to test at the end was $5/5$ (all) of the dataset.
+\begin{table}
+\centering
+\caption{Table accuracy (Cross validation: mean $\pm$ std).}
+\label{table:accuracy}
+\begin{tabular}{|l|l|l|l|} 
+\cline{3-4}
+\multicolumn{1}{l}{} &                     & \multicolumn{2}{c|}{\textbf{Accuracy}}  \\ 
+\cline{3-4}
+\multicolumn{1}{l}{} &                     & Cross validation & Test                 \\ 
+\hline
+                     & Linear Regression   & $61.8\pm7.467$    & $69.2$                 \\ 
+\cline{2-4}
+     & Logistic Regression & $72.4 \pm0.860$    & $73.8$                 \\ 
+\cline{2-4}
+\textbf{Models}    & NN (1 loss)~        & $70.5 \pm12.696$   & $80.5$                 \\ 
+\cline{2-4}
+                     & NN (2 losses)~      & $73.8 \pm10.419$   & $78.4$                 \\ 
+\cline{2-4}
+                     & CNN (1 loss)~       & $81.6 \pm2.289$    & $81.7$                 \\ 
+\cline{2-4}
+                     & CNN (2 losses)      & $81.6 \pm2.223$    & $83.4$                 \\
 \hline
 \end{tabular}
 \end{table}
 
 \section{Conclusion}
 \label{sec:conclusion}
-As future improvement we would like to implement the cross validation.
+Then CNN represents the best model with images recognition. In particular, the CNN with 2 losses seems to perform slightly better. 
 %TODO: add something
-Then CNN is the best %blabla
+As future improvement we would like to implement the cross validation using the \textit{pytorch} library.
 % %%%%%%%%%%%%%%%%%%%%%
+
 
 
 
@@ -193,3 +210,28 @@ Then CNN is the best %blabla
 
 % Your document ends here!
 \end{document}
+
+% \begin{table}
+% \centering
+% \caption{Table with number of parameters for each model.}
+% \label{table:params}
+% \begin{tabular}{|l|l|l|l|l|} 
+% \cline{3-5}
+% \multicolumn{1}{l}{} &                     & \multicolumn{3}{c|}{\textbf{Parameters}}          \\ 
+% \cline{3-5}
+% \multicolumn{1}{l}{} &                     & Feature extractor & Classifier & Total   \\ 
+% \hline
+%                      & Linear Regression   & -                 & 393        & 393     \\ 
+% \cline{2-5}
+%               & Logistic Regression & -                 & 393        & 393     \\ 
+% \cline{2-5}
+%  \textbf{Models}   & NN (1 loss)~        & 133504            & 129        & 133633  \\ 
+% \cline{2-5}
+%                      & NN (2 losses)~      & 133504            & 129        & 136213  \\ 
+% \cline{2-5}
+%                      & CNN (1 loss)~       & 22650             & 25153      & 47803   \\ 
+% \cline{2-5}
+%                      & CNN (2 losses)      & 22650             & 25153      & 49773   \\
+% \hline
+% \end{tabular}
+% \end{table}
