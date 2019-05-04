@@ -6,3 +6,5 @@ data/mnist/
 scripts/__pycache__/
 
 \.DS_Store
+
+code/__pycache__/

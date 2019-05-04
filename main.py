@@ -1,9 +1,9 @@
 import torch
-from scripts.data import Data
-from scripts.models_implemented import *
+from code.data import Data
+from code.models_implemented import *
 
 # train the best model
-model = 4
+model = 6
 
 ################### GENERATE DATASETS ###################
 
@@ -118,6 +118,7 @@ elif(model == 5):
 ############ 6. CONVOLUTIONAL NEURAL NETWORK (2 losses) ###############
 else:
     model_cnn2 = CNNModel2Loss()
+
     train_input, train_target, test_input, test_target = CNNModel2Loss.reshape_data(d)
     print("Number of parameters: {}".format(model_cnn2.number_params()))
     print("Number of parameters of feature_extractor: {}".format(model_cnn2.number_params(model_cnn2.feature_extractor)))

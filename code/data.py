@@ -1,4 +1,4 @@
-from scripts.dlc_practical_prologue import generate_pair_sets
+from code.dlc_practical_prologue import generate_pair_sets
 import torch
 
 class Data(object):

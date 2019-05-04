@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch import optim
 import torch.nn.functional as F
-from scripts.model import Model
+from code.model import Model
 
 ###################### 1. LINEAR MODEL #####################
 # Give weight to each pixel (this weight is taken from gradient descent)
@@ -297,8 +297,8 @@ class CNNModel2Loss(Model):
 
         # classificatore for digit
         self.classifier_digit = nn.Sequential(
-            # 14 x 14 = 196 since we have flatted
-            nn.Linear(14 * 14, 10),
+            # 8 x 7 x 7 = 392 since we have flatted
+            nn.Linear(8 * 7 * 7, 10),
             nn.Sigmoid()
         )
 
@@ -337,14 +337,14 @@ class CNNModel2Loss(Model):
         if len(x.shape) == 4:
             # Conv3d expects an input of shape (N, C_{in}, D, H, W)
             x = x.unsqueeze(1)
+
         features = self.feature_extractor(x)
+        features_first_image = (features[:, :, 0]).contiguous().view(x.shape[0], -1) #shape = [1000, 8*7*7]
+        features_second_image = (features[:, :, 1]).contiguous().view(x.shape[0], -1)
 
         # flatten for the linear layer in the classifier
-        features = features.view(x.shape[0], -1)
-        first_image = (x[:, :, 0]).view(x.shape[0], -1) #shape = [1000, 14*14]
-        second_image = (x[:, :, 1]).view(x.shape[0], -1)
-
-        return self.classifier_bool(features), self.classifier_digit(first_image), self.classifier_digit(second_image) # return predicted values
+        features_flatten = features.view(x.shape[0], -1)
+        return self.classifier_bool(features_flatten), self.classifier_digit(features_first_image), self.classifier_digit(features_second_image) # return predicted values
 
     @classmethod
     def reshape_data(cls, data):

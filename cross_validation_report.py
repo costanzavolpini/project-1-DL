@@ -1,6 +1,6 @@
 from sklearn.model_selection import KFold
-from scripts.data import Data
-from scripts.models_implemented import *
+from code.data import Data
+from code.models_implemented import *
 import matplotlib.pylab as plt
 
 # get the data
