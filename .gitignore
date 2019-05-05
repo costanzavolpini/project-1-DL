@@ -8,3 +8,5 @@ scripts/__pycache__/
 \.DS_Store
 
 code/__pycache__/
+
+\.ipynb_checkpoints/
