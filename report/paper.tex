@@ -41,25 +41,23 @@
 	\maketitle
 	
 \begin{abstract}
-The aim of this project was to show the impact of weight sharing and the use of auxiliary loss. The task was to compare two digits in a two-channel image. Starting from linear model until some more complex non-linear model, we have found out that convolutional neural networks represents the best solution to classify images with  around 15\% error rate.
+The aim of this project was to show the impact of weight sharing and the use of an auxiliary loss. The task was to compare two digits represented as a two-channel image. We have started experimenting with a linear model and, then, we have implemented more complex non-linear and convolutional models. Our experiments show that, indeed, the use of weight sharing, i.e. convolutional layers, and the use of two losses leads to the best solution in his classification problem, achieving an error rate slightly higher than 15\%.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
-\textit{Convolutional neural network} (CNN) represents the most powerful model to analyse images because it preserves the dimension of an image, that guarantees a good use of pixel locality to learn better.
-Simple linear models were used at the beginning of the project, in particular \textit{Linear Regression} and \textit{Logistic Regression} (see Section \ref{sec:linearmodel}), we obtained an accuracy of $70\%$ (these models not consider the pixel locality). We have then used a more complex model \textit{Neural Network} with one-loss and two-losses (as explained and showed in Section \ref{sec:nnmodel}), we got a better accuracy ($80\%$), but we were just using linear layer. Our goal, was to try to take advantage by the locality of the pixel (we want to analyze the context of an image and not just a single value). The last model, takes advantage by the context of an image, \textit{Convolutional neural network} we got a very good accuracies ($82-84\%$)  (see Section \ref{sec:cnnmodel}).
+\textit{Convolutional neural network} (CNN) represents the most effective architectures to analyse images because, differently than linear models, they allow to keep the shape of the input samples, which, in turn, by the use of weight sharing, allows to exploit the pixel locality to learn better.
+Simple linear models were used at the beginning of the project, in particular \textit{Linear Regression} and \textit{Logistic Regression} (see Section \ref{sec:linearmodel}), we have obtained an accuracy of around $70\%$ (these models do not consider the pixel locality). Then, we have used more complex \textit{Linear Neural Networks} respectively with one-loss and two-losses (as explained and showed in Section \ref{sec:nnmodel}). With these we have got a better accuracy ($80\%$), but we were just using linear layers. Our goal, was to try to take advantage by the locality of the pixel (we want to analyze the images as whole to exploit the locality of the pixels). Therefore, the last model architecture we have tried is a \textit{Convolutional neural network} with which we could improve the accuracy ($82-84\%$) (see Section \ref{sec:cnnmodel}).
 
-In all models, we have used \textit{Adam's method} instead of \textit{stochastic gradient descent} as optimizer since it uses an adaptive learning rate (the learning rate of SGD has an equivalent type of effect for all the weights/parameters of the model \cite{reference0}).
-As criterion, we have used \textit{Mean Square Error}.
-
-The models implementation consists of an abstract class that acts as super class. Then, for each model we have implemented a class and inside them we have explicitly separated the feature extractor, used to process the input and extract high level features, from classifier(s), a simple linear layer that we have used to classify.
+In all models, we have used \textit{Adam's method} instead of \textit{Stochastic Gradient Descent (SGD)} as optimizer since it uses a adaptive learning rates, while the SGD has a single, fixed, learning rate for all the weights/parameters of the model \cite{reference0}.
+As criterion, we have used \textit{Mean Square Error} and we also show that this loss can be effectively used in a classification problem only if the output of the model is bounded, e.g. by the use of a sigmoid function.
 
 Section \ref{sec:data} explains the structure of the dataset, Section \ref{sec:codestruc} describes briefly the content of each file. Section \ref{sec:auxilaryloss} explain which auxiliary loss we have used. In Section \ref{sec:comparison} and \ref{sec:conclusion} we have showed the performance accuracy obtained by each model using a cross validation, explaining why we got these results.
 
 
 \section{Data}
 \label{sec:data}
-The data set consists of an input series of $2\times14\times14$ tensor (2 images in grayscale). Training and test set is $1000$ pairs each. In total we will have six tensors: images ($N\times2\times14\times14$), prediction (boolean), classes of the two digits ($N\times2$), both for training and test sets. The MNIST database is composed by handwritten digits (from $0$ to $9$); to load the dataset we have used the provided function \texttt{generate\_pair\_sets(N)}.
+Both the train and the test sets consist of $1000$ samples. Each input sample is a tensor of shape $2\times14\times14$ tensor and represents 2 images in grayscale. While each target sample is represented by 2 tensors: (1) a single value tensor representing the boolean prediction (greater than), and (2) a two values tensor representing the classes of the two digits. The MNIST data set is made of handwritten digits (from $0$ to $9$); to load the dataset we have used the provided function \texttt{generate\_pair\_sets(N)}.
 
 \section{Code structure}
 \label{sec:codestruc}
@@ -72,11 +70,16 @@ This section describes the content of each file.
 \end{itemize}
 Files \texttt{code/cross\_validation\_report.py} and \texttt{BoxPlot\_generator.ipynb} are made for report purposes.
 
-\section{Linear Models}
-\label{sec:linearmodel}
-We have implemented \textit{Linear Regression} and \textit{Logistic Regression}. Regression is represented by a final layer that it is linear. In the logistic regression we have used a sigmoid as an activation function in the output layer. A linear layer accepts as input a vector of values, that is the reason why we need to flat the input (the raw input is composed by 2D images). It gives a weight to each pixel, then it will accept a vector composed by N rows and D dimensions (columns), in our case it will have size $2 \times 14 \times 14$. Linear layers bad generalize images, since it just memorizes the train images, that causes a good train accuracy but a very low test accuracy.
+The models implementation consists of an abstract class that acts as super class and implements all the common functionalities which are shared by the different models, e.g. a \texttt{fit()} function. Then, we have implemented a class for each model which defines two architectures: (1) a feature extractor, used to process the input and extract high level features, (2) one or more classifier(s) (depending on the number of losses that have been used) that are used to obtain either boolean (greater than) or digit predictions.
 
-Linear Regression has a strange behavior in training due to the fact that it has not have a sigmoid and the loss MSE works very bad in a classification task without mapping the value in a range.
+\section{Models}
+In this section we explain the various architectures we have implemented. For each architecture we provide an image detailing its structure. In each image, we differentiate in blue the part that we called "feature extractor" and in red the parts that we treat as classifiers.
+
+\subsection{Linear Models}
+\label{sec:linearmodel}
+We have implemented \textit{Linear Regression},  showed in Fig. \ref{fig:linearregression}, and \textit{Logistic Regression}, showed in Fig. \ref{fig:logisticregression}. In the logistic regression we have used a sigmoid as an activation function as final layer. A linear layer accepts as input a vector of values for each sample, therefore, the input samples have been flattened since our raw input sample are overlaid images. Therefore, the linear layer assigns a weight to each pixel. In short, in our case, the input of the linear models is a tensor of shape $(N, 2 \times 14 \times 14)=(N, 392)$, where N is the number of samples. The risk of using linear layer models is that they bad generalize images and may and up "memorizing" the train images therefore leading to overfitting, i.e. good train accuracy but a very low test accuracy.
+
+We have observed that Linear Regression has a strange behavior during training due to the fact that it does not have a sigmoid and the loss MSE works very bad in a classification task when the output is unbounded because the MSE can easily end up penalizing a lot also correct predictions.
 
 \begin{figure}[!h]
     \centering
@@ -92,11 +95,12 @@ Linear Regression has a strange behavior in training due to the fact that it has
     \label{fig:logisticregression}
 \end{figure}
 
-\section{Neural Network Models}
+\subsection{Neural Network Models}
 \label{sec:nnmodel}
-We have implemented two models for neural network, the first one with 1 loss and the second one with 2 losses, as showed in Fig. \ref{fig:nn1} and Fig. \ref{fig:nn2}. Both models use the same feature extractors but they differs for the classifier(s). The first one has a boolean classifier that compares the two digits visible in the two images. The second model, it has also a digit classifier that returns the corresponding digit for both the handwritten images (class classification: we have used an hot encoding to give a target to each node).
-For these two models the inputs are passed as 2D images. %TODO:sure? o é considerato come vettore?
-Since the feature extractor processes both images together (it does not consider the two images independently), we can use a digit classifier with $20$ nodes as output ($10$ nodes for each images; i.e. from $0$ to $9$ as value of digit). We have noticed that NN with 2 losses seems to perform worst during the test then the model with 1 loss (see Table \ref{table:accuracy}). That seems to be in contrast with what we would expected; two losses could improve the accuracy if the model is more complex, otherwise it would affect negatively the accuracy (as in our case). Since we just have linear layers we could have improved the computation considering both the images independently. We have then decided to implement a convolutional neural network, since \textit{conv3d} allow to automatically process both the images independently.
+We have implemented two models for neural network, the first one with 1 loss and the second one with 2 losses, as showed in Fig. \ref{fig:nn1} and Fig. \ref{fig:nn2}. Both models use the same feature extractors but they differs for the classifier(s). The first one has a boolean classifier that compares the two digits visible in the two images. The second model, it has also a digit classifier that returns the corresponding digit for both the handwritten images. Note that for the digit classification we have used the hot encoding to give a target to each node of he output layer.
+As with the previously explained linear models, the inputs are flattened to obtain a vector of features for each sample.
+Since the feature extractor processes both images together (it does not consider the two images independently), we decided to use a digit classifier with $20$ nodes as output ($10$ nodes for each digit; i.e. from $0$ to $9$ as value of digit). We have noticed that NN with 2 losses seems to perform slightly worse during the test than the model with 1 loss (see Table \ref{table:accuracy}). This is in contrast with what we were expecting. However, we believe that the use of two losses can improve the performance of the model only if the latter is more powerful enough, otherwise it can negatively affect the accuracy (as in our case). We could have improved the computation considering both the images independently, i.e. processing them independently but with the same network.
+
 \begin{figure}[!h]
     \centering
     \includegraphics[width=0.35\textwidth]{nn1.png}
@@ -112,9 +116,9 @@ Since the feature extractor processes both images together (it does not consider
 \end{figure}
 
 
-\section{Convolutional Neural Network Models}
+\subsection{Convolutional Neural Network Models}
 \label{sec:cnnmodel}
-Two models of convolutional neural networks were trained, both received an input of 3D images since we have decided to use a \textit{conv3d}. Conv3d are powerful cnn filter that are able to traverse the image in \textit{x}, \textit{y} and \textit{z} axes; that make possible to independently process both the two images. CNN are powerful since they use pixel locality, instead of flatting the input as done in previous model we consider the two 3D images. As done with the model of NN, in Sec. \ref{sec:nnmodel}, we have decided to compare two models one with one loss and the other one with two losses (see Fig. \ref{fig:cnn1} and Fig. \ref{fig:cnn2}). 
+Finally, we have decided to implement convolutional neural networks. CNNs are powerful since they use pixel locality and weight sharing. In particular, instead of flattening the input, as done for the previously explained models, we can keep the original shape of the images. Moreover, we have decided to employ \textit{conv3d} since they allow to automatically process both the images independently without the need of any preprocessing, i.e. the filters not only slide along the x and y axes but also along the z axis (in which we have our two images). As done with the model of NN, in Sec. \ref{sec:nnmodel}, we have decided to compare two models one with one loss and the other one with two losses (see Fig. \ref{fig:cnn1} and Fig. \ref{fig:cnn2}). 
 We have used the dropout to generalize better and then obtain a more robust model. CNN with 2 losses got the best accuracy with $84\%$  (see Table \ref{table:accuracy}).
 \begin{figure}[!h]
     \centering
@@ -129,17 +133,13 @@ We have used the dropout to generalize better and then obtain a more robust mode
     \label{fig:cnn2}
 \end{figure}
 
-\section{Comparison between 1 loss and 2 losses}
-\label{sec:auxilaryloss}
-We have decided to train the Neural Network and Convolutional Neural Network models also with an auxiliary loss. In addition of the loss obtained with the boolean classifier, we have added a new classifier that should detect the digit class of both images (the target is then an n-hot-encoding). Solving two tasks in parallel can help the model to extract a better representation of the data. The use of an auxiliary loss improved of $2\%$ the accuracy in CNN model.
-
 \section{Comparison of models}
 \label{sec:comparison}
-Since linear models are really sensible to the weights setting 
-we have decided to use a cross validation to compare the models (however, we did not implement our cross validation with \textit{pytorch}, we have used the library \textit{sklearn}).
-Table \ref{table:params} summarizes all the number of parameters for each model. As expected neural networks require more parameters to got a good accuracy since they do not have weight sharing. Convolutional neural networks use weight sharing (a weight for all the pixels of the same filter) then it requires less parameters to got a good accuracy.
+We have decided to use cross validation to obtain a more robust comparison of the models (note that we have implement our cross validation with the library \textit{sklearn}).
+Table \ref{table:params} summarizes all the number of parameters for each model. As expected neural employ weight sharing. Convolutional neural networks use weight sharing (a weight for all the pixels of the same filter) and, therefore, they require a lower number of parameters to get a good accuracy.
 
-Plotboxs (see Fig. \ref{fig:train_acc_box}) show the accuracies for each models (using cross validation). We can notice that the accuracy vary a lot in simple models since they highly depend from weights initialization.
+Box-plots have been used to show, for each model, the accuracies obtained during the cross validation (see Fig. \ref{fig:train_acc_box}). We can notice that the accuracy can vary a lot in simple models since they are very sensible to the initialization of the weights.
+Moreover, we observe that the use of an auxiliary loss improved by $2\%$ the accuracy of the CNN model.
 
 \begin{figure}[!h]
     \centering
@@ -172,7 +172,7 @@ Plotboxs (see Fig. \ref{fig:train_acc_box}) show the accuracies for each models 
 \end{tabular}
 \end{table}
 
-Table \ref{table:accuracy} shows the comparison between the accuracy obtained during the cross validation and the one in test. We can notice that test accuracy got better scores because we have used a bigger dataset to train. The dataset used in cross validation was $4/5$ of the total train set, instead the one used to test at the end was $5/5$ (all) of the dataset.
+Table \ref{table:accuracy} shows the comparison between the accuracy obtained during the cross validation and the one in test. We can notice that test accuracies are higher because, while we have used the whole train set to obtain the final models and compute the test accuracy, during the cross validation the train set was divided in 5 splits and only 4 of them have been used for the training.
 \begin{table}
 \centering
 \caption{Table accuracy (Cross validation: mean $\pm$ std).}
@@ -200,9 +200,9 @@ Table \ref{table:accuracy} shows the comparison between the accuracy obtained du
 
 \section{Conclusion}
 \label{sec:conclusion}
-Convolutional Neural Network represents the best model with images recognition. In particular, the CNN with 2 losses seems to perform slightly better since it is able to extract better the data. We have seen that weight sharing (CNN) improves the accuracy and the robustness of the model, the use of an auxiliary loss in this context improves the results obtained.
+Convolutional Neural Network represents the best model with images recognition. Moreover, the CNN with 2 losses seems to perform slightly better since it learned to extract high-lever feature representing the two digits. We have seen that weight sharing (CNN) improves the accuracy and the robustness of the model, the use of an auxiliary loss in this context improves the obtained results.
 
-As future improvement we would like to implement the cross validation using the \textit{pytorch} library.
+% As future improvement we would like to implement the cross validation using the \textit{pytorch} library.
 % %%%%%%%%%%%%%%%%%%%%%
 
 
