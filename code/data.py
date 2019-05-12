@@ -33,6 +33,16 @@ class Data(object):
         # unsqueeze: add a dimension, example: (n, d) become (n, d, 1) with unsqueeze(2)
         return train_input, train_target, test_input, test_target
 
+    def get_data_2dCNN(self):
+        """
+        Return data as expected by a 3dCNN layer
+        """
+        train_input, train_target, train_classes, test_input, test_target, test_classes = self.get_data()
+        train_input, train_target, test_input, test_target = train_input.unsqueeze(2), train_target.unsqueeze(1), test_input.unsqueeze(2), test_target.unsqueeze(1)
+
+        # unsqueeze: add a dimension, example: (n, d) become (n, d, 1) with unsqueeze(2)
+        return train_input, train_target, test_input, test_target
+
     def get_data_3dCNN2Loss(self):
         """
         Return data as expected by a 3dCNN layer with 2 losses

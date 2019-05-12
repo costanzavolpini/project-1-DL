@@ -251,6 +251,68 @@ class CNNModel1Loss(Model):
     def reshape_data(cls, data):
         return data.get_data_3dCNN()
 
+class CNN2dModel1Loss(Model):
+    """
+    Predicts whether the first image is <= than the second. Only one loss can be applied to the output of this model.
+    Input: (N, 2, 14, 14)
+    Output: (N, 1)
+    """
+    def __init__(self,
+        output_size=1, optimizer = optim.Adam, criterion = nn.MSELoss):
+
+        super(CNN2dModel1Loss, self).__init__()
+
+        self.init_params = {
+            'optimizer': optimizer,
+            'criterion': criterion
+        }
+
+        self.feature_extractor = nn.Sequential(
+            nn.BatchNorm2d(1),
+
+            # padding 2+2 on x-axis, 2+2 on y-axis
+            nn.Conv2d(1, 64, kernel_size=(5, 5), padding=(2, 2)),
+            nn.ReLU(),
+            nn.BatchNorm2d(64),
+
+            nn.Conv2d(64, 32, kernel_size=(3, 3), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Dropout(0.3), # dropout = to make it more general and then have a more robust model
+            nn.BatchNorm2d(32),
+
+            # stride, 1 = filter moves on z-axis (1 pixel), shift by 2 on x-axis, shift by 2 on y-axis
+            # padding 1+1 on x-axis, 1+1 on y-axis
+            nn.Conv2d(32, 8, kernel_size=(3, 3), padding=(1, 1), stride=(2, 2)),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.BatchNorm2d(8)
+        )
+
+        self.classifier = nn.Sequential(
+            # 2 images
+            # 7 x 7 instead of 14 x 14 as size of the image because we have applied a stride
+            nn.Linear(8 * 2 * 7 * 7, 32),
+            nn.ReLU(),
+            nn.Linear(32, output_size),
+            nn.Sigmoid()
+        )
+
+        self.optimizer = optimizer(self.parameters())
+        self.criterion = criterion()
+
+    def forward(self, X):
+        # image must be in 3d
+        features_l = self.feature_extractor(X[:, 0]).view(X.shape[0], -1)
+        features_r = self.feature_extractor(X[:, 1]).view(X.shape[0], -1)
+
+        # flatten the features for the linear layer in the classifier
+        features = torch.cat([features_l, features_r], dim=1)
+        return self.classifier(features)
+
+    @classmethod
+    def reshape_data(cls, data):
+        return data.get_data_2dCNN()
+
 ############ 6. CONVOLUTIONAL NEURAL NETWORK (2 losses) ###############
 # Output = 11 (10 possible values (0 to 9) + 1 to check if image_1 <= image_2)
 class CNNModel2Loss(Model):

@@ -37,7 +37,7 @@ class Model(nn.Module):
             doPrint: bool (if true it prints the epochs with loss and accuracy)
         """
         if doPrint:
-            p = Print(self) #self is the model
+            p = Print(self)
 
         def get_loss_acc(input_, target):
             pred = self(input_)

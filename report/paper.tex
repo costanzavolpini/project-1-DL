@@ -200,7 +200,7 @@ Table \ref{table:accuracy} shows the comparison between the accuracy obtained du
 
 \section{Conclusion}
 \label{sec:conclusion}
-Convolutional Neural Network represents the best model with images recognition. Moreover, the CNN with 2 losses seems to perform slightly better since it learned to extract high-lever feature representing the two digits. We have seen that weight sharing (CNN) improves the accuracy and the robustness of the model, the use of an auxiliary loss in this context improves the obtained results.
+Convolutional Neural Network represents the best model with images recognition. Moreover, the CNN with 2 losses seems to perform slightly better since it learned to extract high-lever feature representing the two digits. We have seen that weight sharing (CNN) improves the accuracy and the robustness of the model, the use of an auxiliary loss in this context improves the obtained results. Our implementation of CNN takes around $190$ seconds, the architecture that we have implemented requires \texttt{conv3d} and \texttt{batchnorm3d} that maybe are not optimized for CPU. In the \texttt{main.py} we implemented the same architecture but using only 2D convolutions, this implementation requires around $160$ seconds.
 
 % As future improvement we would like to implement the cross validation using the \textit{pytorch} library.
 % %%%%%%%%%%%%%%%%%%%%%
