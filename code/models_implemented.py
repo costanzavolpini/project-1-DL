@@ -5,22 +5,26 @@ import torch.nn.functional as F
 from code.model import Model
 
 ###################### 1. LINEAR MODEL #####################
-# Give weight to each pixel (this weight is taken from gradient descent)
+# Give weight to each pixel
 class LinearRegression(Model):
-
+    """
+    A linear layer accepts as input a vector of values for each sample, therefore,
+    the input samples have been flattened since our raw input sample are overlaid images.
+    Therefore, the linear layer assigns a weight to each pixel.
+    """
     def __init__(self, features_in=392, features_out=1, optimizer=optim.Adam, criterion=nn.MSELoss):
         super(LinearRegression, self).__init__()
-        self.init_params = {
-            'features_in': features_in,
-            'features_out': features_out,
-            'optimizer': optimizer,
-            'criterion': criterion
-        }
+
+        # Applies a linear transformation to the incoming data: y = xw + b
+        # x.shape = [N, 392] | w.shape = [392, 1] | b is a scalar
         self.classifier = nn.Sequential(
             nn.Linear(features_in, features_out)
         )
-        self.optimizer = optimizer(self.parameters())
-        self.criterion = criterion()
+
+        # Adam uses a adaptive learning rates,
+        # SGD has a single, fixed, learning rate for all the weights/parameters of the model.
+        self.optimizer = optimizer(self.parameters()) #Adam
+        self.criterion = criterion() #MSE
 
     def forward(self, x):
         # flatten the features for the linear layer in the classifier
@@ -29,6 +33,12 @@ class LinearRegression(Model):
 
     @classmethod
     def reshape_data(cls, data):
+        """
+        Return data as float with inputs flatten.
+        Output:
+            - train_input, test_input: images -> N x 392
+            - train_target, test_target: class to predict in range[0,1] -> N x 1
+        """
         return data.get_data_flatten()
 
 
@@ -37,16 +47,16 @@ class LogisticRegression(Model):
 
     def __init__(self, features_in=392, features_out=1, optimizer=optim.Adam, criterion=nn.MSELoss):
         super(LogisticRegression, self).__init__()
-        self.init_params = {
-            'features_in': features_in,
-            'features_out': features_out,
-            'optimizer': optimizer,
-            'criterion': criterion
-        }
+
+        # Applies a linear transformation to the incoming data: y = xw + b
+        # x.shape = [N, 392] | w.shape = [392, 1] | b is a scalar
         self.classifier = nn.Sequential(
             nn.Linear(features_in, features_out),
-            nn.Sigmoid()
+            nn.Sigmoid() # return value in range [0, 1]
         )
+
+        # Adam uses a adaptive learning rates,
+        # SGD has a single, fixed, learning rate for all the weights/parameters of the model.
         self.optimizer = optimizer(self.parameters())
         self.criterion = criterion()
 
@@ -57,36 +67,37 @@ class LogisticRegression(Model):
 
     @classmethod
     def reshape_data(cls, data):
+        """
+        Return data as float with inputs flatten.
+        Output:
+            - train_input, test_input: images -> N x 392
+            - train_target, test_target: class to predict in range[0,1] -> N x 1
+        """
         return data.get_data_flatten()
 
 ################## 3. NEURAL NET MODEL #####################
 class NNModel1Loss(Model):
-    """
-    Input: (N, 2, 14, 14)
-    Output: (N, 1)
-    """
     def __init__(self,
         features_in=392, features_out=1, optimizer = optim.Adam, criterion = nn.MSELoss):
 
         super(NNModel1Loss, self).__init__()
 
-        self.init_params = {
-            'optimizer': optimizer,
-            'criterion': criterion
-        }
-
+        # Added activation functions: ReLU
+        # 2 hidden layers
         self.feature_extractor = nn.Sequential(
-            nn.Linear(features_in, 256),
+            nn.Linear(features_in, 256), # hidden layer
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(256, 128), # hidden layer
             nn.ReLU()
         )
 
         self.classifier = nn.Sequential(
             nn.Linear(128, features_out),
-            nn.Sigmoid()
+            nn.Sigmoid() # return value in range [0, 1]
         )
 
+        # Adam uses a adaptive learning rates,
+        # SGD has a single, fixed, learning rate for all the weights/parameters of the model.
         self.optimizer = optimizer(self.parameters())
         self.criterion = criterion()
 
@@ -99,49 +110,57 @@ class NNModel1Loss(Model):
 
     @classmethod
     def reshape_data(cls, data):
+        """
+        Return data as float with inputs flatten.
+        Output:
+            - train_input, test_input: images -> N x 392
+            - train_target, test_target: class to predict in range[0,1] -> N x 1
+        """
         return data.get_data_flatten()
 
 ############## 4. NEURAL NET MODEL(2 LOSSES) ###############
 class NNModel2Loss(Model):
     def __init__(self,
-        features_in=392, features_out=1, optimizer = optim.Adam, criterion = nn.MSELoss):
+        features_in=392, features_out=1, optimizer=optim.Adam, criterion=nn.MSELoss):
 
         super(NNModel2Loss, self).__init__()
 
-        self.init_params = {
-            'optimizer': optimizer,
-            'criterion': criterion
-        }
-
+        # The feature extractor processes both images together (it does not consider the two images independently)
+        # Added activation functions: ReLU
+        # 2 hidden layers
         self.feature_extractor = nn.Sequential(
-            nn.Linear(features_in, 256),
+            nn.Linear(features_in, 256), # hidden layer
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(256, 128), # hidden layer
             nn.ReLU()
         )
 
         # classificatore for > (comparison between 2 images)
         self.classifier_bool = nn.Sequential(
-            # 2 images
-            # 7 x 7 instead of 14 x 14 as size of the image because we have applied a stride
             nn.Linear(128, 1),
             nn.Sigmoid()
         )
 
         # classificatore for digit
+        # Since the feature extractor processes both images together, we decided to use a digit classifier
+        # with 20 nodes as output (10 classes + 10 classes).
         self.classifier_digit = nn.Sequential(
             nn.Linear(128, 20),
             nn.Sigmoid()
         )
 
+        # Adam uses a adaptive learning rates,
+        # SGD has a single, fixed, learning rate for all the weights/parameters of the model.
         self.optimizer = optimizer(self.parameters())
         self.criterion = self.custom_criterion
         self.loss_criterion = criterion()
 
+    #TODO: da qua!!!!!!!!!!
     def custom_criterion(self, train_pred, train_target):
             """
             Input:
                 - train_pred: tuple of 3 elements
+                - train_target:
             """
             bool_pred, digit_pred1, digit_pred2 = train_pred
             bool_target, digit_target1, digit_target2 = train_target
