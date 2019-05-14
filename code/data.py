@@ -1,4 +1,4 @@
-from code.dlc_practical_prologue import generate_pair_sets
+from dlc_practical_prologue import generate_pair_sets
 import torch
 
 """

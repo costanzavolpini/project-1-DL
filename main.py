@@ -26,7 +26,7 @@ if(model == 1):
     model_linear.fit(
         train_input, train_target,
         test_input, test_target,
-        epochs=50,
+        epochs=1000,
         batch_size=1000, #so fast that batch does not make sense to use batch
         doPrint=True
     )
@@ -66,7 +66,7 @@ elif(model == 3):
     model_nn1.fit(
         train_input, train_target,
         test_input, test_target,
-        epochs=50,
+        epochs=300,
         batch_size=1000, #so fast that batch does not make sense to use batch
         doPrint=True
     )
@@ -85,7 +85,7 @@ elif(model == 4):
     model_nn2.fit(
         train_input, train_target,
         test_input, test_target,
-        epochs=50,
+        epochs=300,
         batch_size=1000, #so fast that batch does not make sense to use batch
         doPrint=True
     )
@@ -107,7 +107,8 @@ elif(model == 5):
     model_cnn1.fit(
         train_input, train_target,
         test_input, test_target,
-        epochs=50,
+        epochs=25,
+        batch_size=128,
         doPrint=True
     )
 

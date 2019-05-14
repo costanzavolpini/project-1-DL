@@ -41,7 +41,7 @@
 	\maketitle
 	
 \begin{abstract}
-The aim of this project was to show the impact of weight sharing and the use of an auxiliary loss. The task was to compare two digits represented as a two-channel image. We have started experimenting with a linear model and, then, we have implemented more complex non-linear and convolutional models. Our experiments show that, indeed, the use of weight sharing, i.e. convolutional layers, and the use of two losses leads to the best solution in his classification problem, achieving an error rate slightly higher than 15\%.
+The aim of this project was to show the impact of weight sharing and the use of an auxiliary loss. The task was to compare two digits represented as a two-channel image. We have started experimenting with a linear model and, then, we have implemented more complex non-linear and convolutional models. Our experiments show that, indeed, the use of weight sharing, i.e. convolutional layers, and the use of two losses leads to the best solution in his classification problem, achieving an error rate around 15\%.
 \end{abstract}
 
 \section{Introduction}
@@ -52,12 +52,12 @@ Simple linear models were used at the beginning of the project, in particular \t
 In all models, we have used \textit{Adam's method} instead of \textit{Stochastic Gradient Descent (SGD)} as optimizer since it uses a adaptive learning rates, while the SGD has a single, fixed, learning rate for all the weights/parameters of the model \cite{reference0}.
 As criterion, we have used \textit{Mean Square Error} and we also show that this loss can be effectively used in a classification problem only if the output of the model is bounded, e.g. by the use of a sigmoid function.
 
-Section \ref{sec:data} explains the structure of the dataset, Section \ref{sec:codestruc} describes briefly the content of each file. Section \ref{sec:auxilaryloss} explain which auxiliary loss we have used. In Section \ref{sec:comparison} and \ref{sec:conclusion} we have showed the performance accuracy obtained by each model using a cross validation, explaining why we got these results.
+Section \ref{sec:data} explains the structure of the dataset, Section \ref{sec:codestruc} describes briefly the content of each file. In Section \ref{sec:comparison} and \ref{sec:conclusion} we have showed the performance accuracy obtained by each model using a cross validation, explaining why we got these results.
 
 
 \section{Data}
 \label{sec:data}
-Both the train and the test sets consist of $1000$ samples. Each input sample is a tensor of shape $2\times14\times14$ tensor and represents 2 images in grayscale. While each target sample is represented by 2 tensors: (1) a single value tensor representing the boolean prediction (greater than), and (2) a two values tensor representing the classes of the two digits. The MNIST data set is made of handwritten digits (from $0$ to $9$); to load the dataset we have used the provided function \texttt{generate\_pair\_sets(N)}.
+Both the train and the test sets consist of $1000$ samples. Each input sample is a tensor of shape $2\times14\times14$ tensor and represents 2 images in grayscale. While each target sample is represented by 2 tensors: (1) a single value tensor representing the boolean prediction (greater than), and (2) a two values tensor representing the classes of the two digits. The MNIST data set is made of handwritten digits (from $0$ to $9$); to load the dataset we have used the provided function \texttt{generate\_pair\_sets(N)} in file \texttt{dlc\_practical\_prologue.py}.
 
 \section{Code structure}
 \label{sec:codestruc}
@@ -68,7 +68,7 @@ This section describes the content of each file.
     \item \texttt{code/models\_implemented.py}: contains all the model classes (e.g. NNModel1Loss, CNNModel2Loss).
     \item \texttt{main.py}: contains examples of each model, in order to call and train it.
 \end{itemize}
-Files \texttt{code/cross\_validation\_report.py} and \texttt{BoxPlot\_generator.ipynb} are made for report purposes.
+Files \texttt{cross\_validation\_report.py} and \texttt{BoxPlot\_generator.ipynb} are made for report purposes.
 
 The models implementation consists of an abstract class that acts as super class and implements all the common functionalities which are shared by the different models, e.g. a \texttt{fit()} function. Then, we have implemented a class for each model which defines two architectures: (1) a feature extractor, used to process the input and extract high level features, (2) one or more classifier(s) (depending on the number of losses that have been used) that are used to obtain either boolean (greater than) or digit predictions.
 
@@ -200,7 +200,7 @@ Table \ref{table:accuracy} shows the comparison between the accuracy obtained du
 
 \section{Conclusion}
 \label{sec:conclusion}
-Convolutional Neural Network represents the best model with images recognition. Moreover, the CNN with 2 losses seems to perform slightly better since it learned to extract high-lever feature representing the two digits. We have seen that weight sharing (CNN) improves the accuracy and the robustness of the model, the use of an auxiliary loss in this context improves the obtained results. Our implementation of CNN takes around $190$ seconds, the architecture that we have implemented requires \texttt{conv3d} and \texttt{batchnorm3d} that maybe are not optimized for CPU. In the \texttt{main.py} we implemented the same architecture but using only 2D convolutions, this implementation requires around $160$ seconds.
+Convolutional Neural Network represents the best model with images recognition. Moreover, the CNN with 2 losses seems to perform slightly better since it learned to extract high-lever feature representing the two digits. We have seen that weight sharing (CNN) improves the accuracy and the robustness of the model, the use of an auxiliary loss in this context improves the obtained results. Our implementation of CNN takes around $190$ seconds, the architecture that we have implemented requires \texttt{conv3d} and \texttt{batchnorm3d} that maybe are not optimized for CPU. In the \texttt{models\_implemented.py} we implemented the same architecture but using only 2D convolutions, this implementation requires around $160$ seconds.
 
 % As future improvement we would like to implement the cross validation using the \textit{pytorch} library.
 % %%%%%%%%%%%%%%%%%%%%%

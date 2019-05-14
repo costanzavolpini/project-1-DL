@@ -131,10 +131,10 @@ class NNModel1Loss(Model):
 class NNModel2Loss(Model):
     """
     Input: (N, 392)
-    Output: (N, 1)
+    Output: (N, 21)
     """
     def __init__(self,
-        features_in=392, features_out=1, optimizer=optim.Adam, criterion=nn.MSELoss):
+        features_in=392, features_out=21, optimizer=optim.Adam, criterion=nn.MSELoss):
 
         super(NNModel2Loss, self).__init__()
 
