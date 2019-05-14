@@ -5,21 +5,16 @@ import torch
 from torch import nn
 
 from matplotlib.pylab import plt
-from matplotlib.ticker import MaxNLocator
 
 ##################### MODEL CLASS #####################
-
 class Model(nn.Module):
     """
     Abstract class to implement model.
-    Subclass of this module should implement the following methods:
-    - self.init_params: a map composed by
-        - self.optim: pointer to optimizer passed in init.
-        - self.criterion: pointer to loss fn passed in init.
     """
+
     def __init__(self):
         """
-        Initialize function.
+        Initialize function for model and history.
         """
         super(Model, self).__init__()
         self.history = History()
@@ -32,27 +27,35 @@ class Model(nn.Module):
             train_target: train target data
             test_input: test data if any
             test_target: test target data if any
-            epochs: int,
-            batch_size: int,
+            epochs: number of epochs,
+            batch_size: size of the batch,
             doPrint: bool (if true it prints the epochs with loss and accuracy)
         """
+
+        # Iniziale Print to print accuracy and loss for each epoch
         if doPrint:
             p = Print(self)
 
-        def get_loss_acc(input_, target):
-            pred = self(input_)
-            loss = self.criterion(pred, target) # apply loss (i.e. MSE)
-            acc = self.compute_accuracy(pred, target) # compute accuracy
-            return loss, acc
+        def get_loss_accuracy(input_, target):
+            """
+            Function to get the loss and accuracy. Given the input and target.
+            """
+            predicted = self(input_) # get predicted (forward method in each subclass model)
+            loss = self.criterion(predicted, target) # apply loss (i.e. MSE)
+            accuracy = self.compute_accuracy(predicted, target) # compute accuracy
+            return loss, accuracy
 
         for e in range(1, epochs + 1):
+
             # shuffle the train set to select different batches at each epoch
-            indices_shuffled = torch.randperm(train_input.shape[0])
+            indices_shuffled = torch.randperm(train_input.shape[0]) # random permutation of integers from 0 to train_input.shape[0] - 1.
             train_input = train_input[indices_shuffled]
-            if isinstance(train_target, tuple): #bool, digit1, digit2 -> take corresponding in each target
+
+            # shuffle target set according to indices_shuffled
+            if isinstance(train_target, tuple): # bool, digit1, digit2 -> take corresponding in each target
                 train_target = tuple(t[indices_shuffled] for t in train_target)
             else:
-                train_target = train_target[indices_shuffled]
+                train_target = train_target[indices_shuffled] # no auxiliary loss then just bool
 
             # iterate over the batches
             train_loss = 0
@@ -63,21 +66,22 @@ class Model(nn.Module):
                 # get the current batch from the trainset
                 batch_end = batch_start + batch_size
                 train_input_batch = train_input[batch_start:batch_end]
-                if isinstance(train_target, tuple):
+                if isinstance(train_target, tuple): # we are using an auxiliary loss -> target is a tuple
                     train_target_batch = tuple(t[batch_start:batch_end] for t in train_target)
-                else:
+                else: # no auxiliary loss -> target is not a tuple
                     train_target_batch = train_target[batch_start:batch_end]
 
-                # flush gradients before train step
+                # set gradients to zero before train step
                 self.optimizer.zero_grad()
 
-                # return predicted value (forward method of subclass model)
-                train_loss_batch, train_acc_batch = get_loss_acc(train_input_batch, train_target_batch)
+                # call forward method of subclass inside get_loss_accuracy method to get predicted value
+                train_loss_batch, train_acc_batch = get_loss_accuracy(train_input_batch, train_target_batch)
                 train_loss += train_loss_batch.item()
                 train_acc += train_acc_batch
 
-                train_loss_batch.backward() # backward propagation of grads
-                self.optimizer.step() # update params
+                train_loss_batch.backward() # backward propagation of gradients
+                self.optimizer.step() # update parameters of optimizer
+
             # do the average across batches
             train_loss /= n_batches
             train_acc /= n_batches
@@ -86,9 +90,9 @@ class Model(nn.Module):
             test_acc = None
             test_loss = None
 
-            # do the same with test if it is passed and overwrite test_acc and test_loss
+            # If we have the test compute loss and accuracy and overwrite test_acc and test_loss
             if test_input is not None:
-                test_loss, test_acc = get_loss_acc(test_input, test_target)
+                test_loss, test_acc = get_loss_accuracy(test_input, test_target)
                 test_loss = test_loss.item()
 
             # add epoch to history saving new values
@@ -97,16 +101,18 @@ class Model(nn.Module):
                 test_loss=test_loss, test_acc=test_acc
             )
 
-            # ----- print all the information
+            # print accuracy and loss for each epoch
             if doPrint:
                 p()
 
         return self
 
     def get_accuracy_train(self):
+        # just get the last accuracy of the train
         return self.history.get_accuracies_train()[-1]
 
     def get_accuracy_test(self):
+        # just get the last accuracy of the test
         return self.history.get_accuracies_test()[-1]
 
     def plot_history(self):
@@ -122,7 +128,6 @@ class Model(nn.Module):
     def compute_accuracy(self, y_pred, y_target):
         """
         Function to compute accuracy.
-        Just take first value in y_pred.
         """
         y_pred = y_pred.clone()
         y_pred[y_pred>0.5] = 1
@@ -136,7 +141,8 @@ class Model(nn.Module):
         Return the number of parameters of the model.
         """
         if module is None:
-            module = self
+            module = self # parameters of model
+
         # p.numel() returns #entries (#parameters that define tensor p)
         # p.requires_grad = p is part of neural network
         return sum(p.numel() for p in module.parameters() if p.requires_grad)
@@ -157,9 +163,9 @@ class History():
         self.test_losses = []
         self.test_acc = []
 
-    def epoch(self, train_loss, train_acc, test_loss = None, test_acc = None):
+    def epoch(self, train_loss, train_acc, test_loss=None, test_acc=None):
         """
-        Add a new epoch and update all values.
+        Add a new epoch and update all values. This method is called at the end of each epoch from the model.
         """
         self.epochs += 1
         self.train_losses.append(train_loss)
@@ -173,19 +179,18 @@ class History():
         """
         epochs_range = list(range(1, self.epochs + 1))
 
-        ax = plt.figure(figsize=(7, 5)).gca()
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax = plt.figure(figsize=(7, 5)).gca() # gca = create current axes instance on the current figure
 
-        ax.plot(epochs_range, val1, label=text1)
-        ax.plot(epochs_range, val2, label=text2)
+        ax.plot(epochs_range, val1, label=text1) # epochs
+        ax.plot(epochs_range, val2, label=text2) # accuracy or loss depend on legend
 
         ax.grid()
-
         ax.set_xlabel("epochs", fontsize = 16)
         ax.set_ylabel(legend, fontsize = 16)
 
         if isAccuracy:
-            ax.set_ylim((0, 100))
+            ax.set_ylim((0, 100)) # accuracy is between 0 and 100
+
         ax.legend(fontsize = 13)
 
 
@@ -201,6 +206,7 @@ class History():
         """
         self.plot_general(self.test_acc, self.train_acc, 'Test accuracy', 'Train accuracy', 'accuracy', True)
 
+    # Getter function for accuracies
     def get_accuracies_train(self):
         return self.train_acc
 
@@ -209,42 +215,47 @@ class History():
 
 ################################### PRINT CLASS ###################################
 class Print():
-    """ Pring log messages during training. """
+    """
+    Pring accuracy and loss during training for each epoch.
+    """
 
     def __init__(self, model):
         self.model = model
         self.curr_epoch = self.model.history.epochs # epochs is updated time by time
 
+        # set colors and style for print
         self.style = {
             'PURPLE': '\033[95m',
-            'BLUE': '\033[94m',
             'GREEN': '\033[92m',
             'RED': '\033[91m',
             'BOLD': '\033[1m',
-            'UNDERLINE': '\033[4m',
             'END': '\033[0m',
         }
 
+        # Print header
         print("{BOLD}{:^10}{END} | {BOLD}{:^25}{END} | {BOLD}{:^25}{END}".format('Epoch', 'Train loss - Accuracy', 'Dev. loss - Accuracy', **self.style))
 
+    # Called every time we do p() -> then for each epoch
     def __call__(self):
-        # compute how much time the epoch lasted
+        # get hisory
         h = self.model.history
 
-        # compute epochs num
-        curr_epoch = str(h.epochs)
+        # compute #epoch
+        epoch = str(h.epochs)
 
-        # get last losses
-        tr_loss, test_loss = h.train_losses[-1], h.test_losses[-1]
+        # get last loss of train and test
+        train_loss = h.train_losses[-1]
+        test_loss =  h.test_losses[-1]
 
         # get last accuracies
-        tr_acc, test_acc = h.train_acc[-1], h.test_acc[-1]
+        train_accuracy = h.train_acc[-1]
+        test_accuracy = h.test_acc[-1]
 
         print(
             "{PURPLE}{:^10}{END} | {RED}{:^25}{END} | {GREEN}{:^25}{END}".format(
-                curr_epoch,
-                '{:5.4f} - {:3.2f}%'.format(tr_loss, tr_acc),
-                'na - na' if test_loss is None else '{:5.4f} - {:3.2f}%'.format(test_loss, test_acc),
+                epoch, # purple
+                '{:5.4f} - {:3.2f}%'.format(train_loss, train_accuracy), # red
+                'na - na' if test_loss is None else '{:5.4f} - {:3.2f}%'.format(test_loss, test_accuracy), # green
                 **self.style
             )
         )
