@@ -3,6 +3,10 @@ from code.data import Data
 from code.models_implemented import *
 import matplotlib.pylab as plt
 
+"""
+This file use library that are not allowed for this project such as sklearn. We have used this file just to do a cross validation
+in order to show results in our report.
+"""
 # get the data
 d = Data()
 
@@ -10,6 +14,7 @@ d = Data()
 n_splits=5
 
 # define the parameters for the fit of the models
+# some models require less epochs (we pick the values looking from the plot)
 model_class_fit_params = {
     LinearRegression: {'epochs': 1000, 'batch_size': 1000},
     LogisticRegression: {'epochs': 1000, 'batch_size': 1000},
@@ -28,16 +33,19 @@ for model_class, fit_params in model_class_fit_params.items():
     train_input, train_target, test_input, test_target = model_class.reshape_data(d)
 
     accuracies[model_class_name] = {'cross_val_accuracies': [], 'train_accuracy': None, 'test_accuracy': None}
-    # cross validdation estimate the score we will obtain with the test set
+
+    # cross validation estimate the score we will obtain with the test set
     for train_index, test_index in kf.split(train_input):
         X_train, X_test = train_input[train_index], train_input[test_index]
-        if isinstance(train_target, tuple):
+
+        if isinstance(train_target, tuple): #use auxiliary loss
             y_train = tuple([y[train_index] for y in train_target])
             y_test = tuple([y[test_index] for y in train_target])
         else:
             y_train, y_test = train_target[train_index], train_target[test_index]
 
         model = model_class()
+
         model.fit(
             X_train, y_train,
             X_test, y_test,
@@ -55,6 +63,7 @@ for model_class, fit_params in model_class_fit_params.items():
         doPrint=False,
         **fit_params
     )
+
     # model.plot_history()
     # plt.savefig(model_class_name)
 

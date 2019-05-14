@@ -375,9 +375,9 @@ class CNNModel2Loss(Model):
     """
     Two losses can be applied to the output of this model.
     Input: (N, 1, 2, 14, 14)
-    Output: (N, 11) -> (10 possible values (0 to 9) + 1 to check if image_1 <= image_2)
+    Output: (N, 21) -> (10 possible values (0 to 9) for each image + 1 to check if image_1 <= image_2)
     """
-    def __init__(self, features_in=392, output_size=11, optimizer=optim.Adam, criterion=nn.MSELoss):
+    def __init__(self, features_in=392, output_size=21, optimizer=optim.Adam, criterion=nn.MSELoss):
 
         super(CNNModel2Loss, self).__init__()
 

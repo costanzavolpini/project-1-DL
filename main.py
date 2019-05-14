@@ -6,16 +6,11 @@ import timeit
 import time
 
 # train the best model
-model = 4
+model = 6
 
 ################### GENERATE DATASETS ###################
 
 d = Data()
-
-#########################################################
-
-# Adam’s method considered as a method of Stochastic Optimization is a technique implementing adaptive learning rate.
-# Whereas in normal SGD the learning rate has an equivalent type of effect for all the weights/parameters of the model.
 
 ###################### 1. LINEAR MODEL #####################
 if(model == 1):
@@ -133,12 +128,12 @@ elif (model == 6):
         test_input, test_target,
         epochs=25,
         batch_size=128,
-        doPrint=False
+        doPrint=True
     )
     end = time. time()
     print(end - start)
 
-    # model_cnn2.plot_history()
+    model_cnn2.plot_history()
 
 ############ Just for comparison, CNN (1 loss and filter of 2d) ###############
 else:
@@ -154,9 +149,9 @@ else:
         test_input, test_target,
         epochs=25,
         batch_size=128,
-        doPrint=False
+        doPrint=True
     )
     end = time.time()
     print(end - start) #time: 164
 
-    # model_cnn2.plot_history()
+    model_cnn2d_1.plot_history()
