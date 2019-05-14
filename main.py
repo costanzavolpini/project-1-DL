@@ -94,10 +94,6 @@ elif(model == 4):
 
 ############ 5. CONVOLUTIONAL NEURAL NETWORK ###############
 elif(model == 5):
-
-    # add another dimension (as expected from Conv3d)
-    # X = train_input.unsqueeze(1)
-    # a(X).shape --> 32 filters => in the second dimensions we have 32 "layers" and each one is calculated by a filter
     model_cnn1 = CNNModel1Loss()
     train_input, train_target, test_input, test_target = CNNModel1Loss.reshape_data(d)
     print("Number of parameters: {}".format(model_cnn1.number_params()))
@@ -123,7 +119,6 @@ elif (model == 6):
     print("Number of parameters of feature_extractor: {}".format(model_cnn2.number_params(model_cnn2.feature_extractor)))
     print("Number of parameters of classifier: {}".format(model_cnn2.number_params(model_cnn2.classifier_bool)))
 
-    start = time. time()
     model_cnn2.fit(
         train_input, train_target,
         test_input, test_target,
@@ -131,12 +126,10 @@ elif (model == 6):
         batch_size=128,
         doPrint=True
     )
-    end = time. time()
-    print(end - start)
 
     model_cnn2.plot_history()
 
-############ Just for comparison, CNN (1 loss and filter of 2d) ###############
+############ Just for comparison, CNN (1 loss and 2d conv) ###############
 else:
     model_cnn2d_1 = CNN2dModel1Loss()
 
@@ -144,7 +137,7 @@ else:
     print("Number of parameters: {}".format(model_cnn2d_1.number_params()))
     print("Number of parameters of feature_extractor: {}".format(model_cnn2d_1.number_params(model_cnn2d_1.feature_extractor)))
 
-    start = time.time()
+    # start = time.time()
     model_cnn2d_1.fit(
         train_input, train_target,
         test_input, test_target,
@@ -152,7 +145,7 @@ else:
         batch_size=128,
         doPrint=True
     )
-    end = time.time()
-    print(end - start) #time: 164
+    # end = time.time()
+    # print(end - start) #time: 164
 
     model_cnn2d_1.plot_history()
