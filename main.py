@@ -6,7 +6,7 @@ import timeit
 import time
 
 # train the best model
-model = 50
+model = 4
 
 ################### GENERATE DATASETS ###################
 

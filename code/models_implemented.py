@@ -155,37 +155,47 @@ class NNModel2Loss(Model):
         self.criterion = self.custom_criterion
         self.loss_criterion = criterion()
 
-    #TODO: da qua!!!!!!!!!!
+    # Since we are using an auxiliary loss we need to pass our predicted value as tuple (same for target).
+    # Then we can use MSE on all the elements of tuple.
+    # We give more weight to the loss of boolean classification since we are more interested in comparing 2 digits.
     def custom_criterion(self, train_pred, train_target):
             """
+            Function to compute loss when we have an auxiliary loss.
             Input:
                 - train_pred: tuple of 3 elements
-                - train_target:
+                - train_target: tuple of 3 elements
             """
             bool_pred, digit_pred1, digit_pred2 = train_pred
             bool_target, digit_target1, digit_target2 = train_target
 
             bool_loss = self.loss_criterion(bool_pred, bool_target)
             digit_loss1 = self.loss_criterion(digit_pred1, digit_target1)
-
             digit_loss2 = self.loss_criterion(digit_pred2, digit_target2)
 
-            return 10 * bool_loss + digit_loss1 + digit_loss2 # give more weight to bool_loss (10*bool_loss + 1*digit_loss1 + 1*digit_loss2)
+            return 10 * bool_loss + digit_loss1 + digit_loss2
 
     # predict how accurate predict img1 < img2
     def compute_accuracy(self, y_pred, y_target):
+        """
+            Function to compute accuracy when we have an auxiliary loss.
+            We just compute the accuracy on the boolean prediction.
+            Input:
+                - y_pred: tuple of 3 elements
+                - y_target: tuple of 3 elements
+            """
         bool_pred, digit_pred1, digit_pred2 = y_pred
         bool_target, digit_target1, digit_target2 = y_target
 
         bool_pred = bool_pred.clone()
-        bool_pred[bool_pred>0.5] = 1
-        bool_pred[bool_pred<=0.5] = 0
+        bool_pred[bool_pred > 0.5] = 1
+        bool_pred[bool_pred <= 0.5] = 0
         acc = 100 * ((bool_pred == bool_target).sum().type(torch.FloatTensor).item())
         n = bool_pred.shape[0]
         return acc / n # normalize by divide by length (1000) -> same as mean
 
     def forward(self, X):
-        # X.shape = (N, 2*14*14)
+        # X.shape = (1000, 392) -> (N, 2*14*14)
+
         # extract features
         features = self.feature_extractor(X)
 
@@ -194,13 +204,19 @@ class NNModel2Loss(Model):
 
         # classify digits
         digit_pred = self.classifier_digit(features)
-        digit_pred_left = digit_pred[:, :10]
-        digit_pred_right = digit_pred[:, 10:]
+        digit_pred_left = digit_pred[:, :10] # first 10 values refer to img1
+        digit_pred_right = digit_pred[:, 10:] # last 10 values refer to img2
 
         return bool_pred, digit_pred_left, digit_pred_right
 
     @classmethod
     def reshape_data(cls, data):
+        """
+        Return data as expected by a NN layer with 2 losses.
+        Output:
+            - train_input, test_input: images -> N x 392
+            - train_target, test_target: tuple of 3 composed by target_bool, class_img1, class_img -> (N x 1, N x 10, N x 10)
+        """
         return data.get_data_NN2Loss()
 
 ############ 5. CONVOLUTIONAL NEURAL NETWORK ###############
