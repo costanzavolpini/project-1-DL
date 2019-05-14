@@ -3,7 +3,8 @@
 **EPFL | Deep Learning | EE559** <br>
 Project realized in context of the master course EE-559 Deep Learning at EPFL (Summer Semester 2018/2019).
 
-Professor: __François **Fleuret**__
+Professor: François **Fleuret**
+
 Students: Francis **Damachi**, Costanza **Volpini**
 
 ### DESCRIPTION:
@@ -13,11 +14,10 @@ The aim of this project was to show the impact of weight sharing and the use of 
 Convolutional Neural Network represents the best model with images recognition. Moreover, the CNN with 2 losses seems to perform slightly better since it learned to extract high-lever feature representing the two digits. We have seen that weight sharing (CNN) improves the accuracy and the robustness of the model, the use of an auxiliary loss in this context improves the obtained results. Our implementation of CNN takes around 190 seconds, the architecture that we have implemented requires __conv3d__ and __batchnorm3d__ that maybe are not optimized for CPU. In the __models_implemented.py__ we implemented the same architecture but using only 2D convolutions, this implementation requires around 160 seconds.
 
 ### CODE STRUCTURE:
-    - code/data.py: class to generate the dataset. Contains different methods (e.g. flat the input, get a dataset in 2D or in 3D, enable the hot-encoding).
-    - code/model.py: general class to define a model to train and test it (with corresponding plot and history).
-    - code/models_implemented.py: contains all the model classes (e.g. NNModel1Loss, CNNModel2Loss).
-    - main.py: contains examples of each model, in order to call and train it.
-    -
+- code/data.py: class to generate the dataset. Contains different methods (e.g. flat the input, get a dataset in 2D or in 3D, enable the hot-encoding).
+- code/model.py: general class to define a model to train and test it (with corresponding plot and history).
+- code/models_implemented.py: contains all the model classes (e.g. NNModel1Loss, CNNModel2Loss).
+- main.py: contains examples of each model, in order to call and train it.
 Files cross_validation_report.py and BoxPlot_generator.ipynb are made for report purposes.
 
 ### TO RUN THE CODE:
