@@ -208,7 +208,6 @@ class NNModel2Loss(Model):
 
     def forward(self, X):
         # X.shape = (1000, 392) -> (N, 2*14*14)
-
         # extract features
         features = self.feature_extractor(X)
 
@@ -372,22 +371,23 @@ class CNN2dModel1Loss(Model):
         return data.get_data_2dCNN()
 
 ############ 6. CONVOLUTIONAL NEURAL NETWORK (2 losses) ###############
-# Output = 11 (10 possible values (0 to 9) + 1 to check if image_1 <= image_2)
 class CNNModel2Loss(Model):
-
+    """
+    Two losses can be applied to the output of this model.
+    Input: (N, 1, 2, 14, 14)
+    Output: (N, 11) -> (10 possible values (0 to 9) + 1 to check if image_1 <= image_2)
+    """
     def __init__(self, features_in=392, output_size=11, optimizer=optim.Adam, criterion=nn.MSELoss):
 
         super(CNNModel2Loss, self).__init__()
 
-        self.init_params = {
-            'optimizer': optimizer,
-            'criterion': criterion
-        }
-
         self.feature_extractor = nn.Sequential(
+            # Use batch normalization to normalize the input layer by adjusting and scaling the activations.
+            # Allow each layer of a network to learn by itself a little bit more independently of other layers.
             nn.BatchNorm3d(1),
 
-            # padding 2+2 on x-axis, 2+2 on y-axis
+            # padding 2+2 on x-axis, 2+2 on y-axis (depth=0, height=2, width=2)
+            # add padding to keep input dimensions
             nn.Conv3d(1, 64, kernel_size=(1, 5, 5), padding=(0, 2, 2)),
             nn.ReLU(),
             nn.BatchNorm3d(64),
@@ -397,6 +397,7 @@ class CNNModel2Loss(Model):
             nn.Dropout(0.3), # dropout = to make it more general and then have a more robust model
             nn.BatchNorm3d(32),
 
+            # Stride controls how the filter convolves around the input volume. -> it is used to avoid to have a fraction in output volume instead of an integer
             # stride, 1 = filter moves on z-axis (1 pixel), shift by 2 on x-axis, shift by 2 on y-axis
             # padding 1+1 on x-axis, 1+1 on y-axis
             nn.Conv3d(32, 8, kernel_size=(1, 3, 3), padding=(0, 1, 1), stride=(1, 2, 2)),
@@ -417,7 +418,7 @@ class CNNModel2Loss(Model):
 
         # classificatore for digit
         self.classifier_digit = nn.Sequential(
-            # 8 x 7 x 7 = 392 since we have flatted
+            # 8 x 7 x 7 = 392 since we have flatte
             nn.Linear(8 * 7 * 7, 10),
             nn.Sigmoid()
         )
@@ -426,10 +427,15 @@ class CNNModel2Loss(Model):
         self.criterion = self.custom_criterion
         self.loss_criterion = criterion()
 
+    # Since we are using an auxiliary loss we need to pass our predicted value as tuple (same for target).
+    # Then we can use MSE on all the elements of tuple.
+    # We give more weight to the loss of boolean classification since we are more interested in comparing 2 digits.
     def custom_criterion(self, train_pred, train_target):
             """
+            Function to apply loss on all the elements of tuple.
             Input:
                 - train_pred: tuple of 3 elements
+                - train_target: tuple of 3 elements
             """
             bool_pred, digit_pred1, digit_pred2 = train_pred
             bool_target, digit_target1, digit_target2 = train_target
@@ -439,10 +445,16 @@ class CNNModel2Loss(Model):
 
             digit_loss2 = self.loss_criterion(digit_pred2, digit_target2)
 
-            return 10*bool_loss + digit_loss1 + digit_loss2 # give more weight to bool_loss (10*bool_loss + 1*digit_loss1 + 1*digit_loss2)
+            return 10 * bool_loss + digit_loss1 + digit_loss2 # give more weight to bool_loss
 
     # predict how accurate predict img1 < img2
     def compute_accuracy(self, y_pred, y_target):
+        """
+        Function to compute accuracy when we have an auxiliary loss. Just compute accuracy of bool prediction.
+        Input:
+            - train_pred: tuple of 3 elements
+            - train_target: tuple of 3 elements
+        """
         bool_pred, digit_pred1, digit_pred2 = y_pred
         bool_target, digit_target1, digit_target2 = y_target
 
@@ -456,10 +468,11 @@ class CNNModel2Loss(Model):
     def forward(self, x):
         if len(x.shape) == 4:
             # Conv3d expects an input of shape (N, C_{in}, D, H, W)
-            x = x.unsqueeze(1)
+            x = x.unsqueeze(1) #add C_{in}
 
         features = self.feature_extractor(x)
-        features_first_image = (features[:, :, 0]).contiguous().view(x.shape[0], -1) #shape = [1000, 8*7*7]
+        # divide features of both images and flat them
+        features_first_image = (features[:, :, 0]).contiguous().view(x.shape[0], -1) # shape = (1000, 8 * 7 * 7)
         features_second_image = (features[:, :, 1]).contiguous().view(x.shape[0], -1)
 
         # flatten for the linear layer in the classifier
@@ -468,4 +481,10 @@ class CNNModel2Loss(Model):
 
     @classmethod
     def reshape_data(cls, data):
+        """
+        Return data as expected by a 3dCNN layer with 2 losses.
+        Output:
+            - train_input, test_input: images -> N x 1 x 2 x 14 x 14
+            - train_target, test_target: tuple of 3 composed by target_bool, class_img1, class_img2 -> (N x 1, N x 10, N x 10)
+        """
         return data.get_data_3dCNN2Loss()
