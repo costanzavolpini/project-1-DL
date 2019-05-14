@@ -11,6 +11,8 @@ class LinearRegression(Model):
     A linear layer accepts as input a vector of values for each sample, therefore,
     the input samples have been flattened since our raw input sample are overlaid images.
     Therefore, the linear layer assigns a weight to each pixel.
+    Input: (N, 392)
+    Output: (N, 1)
     """
     def __init__(self, features_in=392, features_out=1, optimizer=optim.Adam, criterion=nn.MSELoss):
         super(LinearRegression, self).__init__()
@@ -44,7 +46,10 @@ class LinearRegression(Model):
 
 #################### 2. LOGISTIC MODEL #####################
 class LogisticRegression(Model):
-
+    """
+    Input: (N, 392)
+    Output: (N, 1)
+    """
     def __init__(self, features_in=392, features_out=1, optimizer=optim.Adam, criterion=nn.MSELoss):
         super(LogisticRegression, self).__init__()
 
@@ -77,6 +82,10 @@ class LogisticRegression(Model):
 
 ################## 3. NEURAL NET MODEL #####################
 class NNModel1Loss(Model):
+    """
+    Input: (N, 392)
+    Output: (N, 1)
+    """
     def __init__(self,
         features_in=392, features_out=1, optimizer = optim.Adam, criterion = nn.MSELoss):
 
@@ -120,6 +129,10 @@ class NNModel1Loss(Model):
 
 ############## 4. NEURAL NET MODEL(2 LOSSES) ###############
 class NNModel2Loss(Model):
+    """
+    Input: (N, 392)
+    Output: (N, 1)
+    """
     def __init__(self,
         features_in=392, features_out=1, optimizer=optim.Adam, criterion=nn.MSELoss):
 
@@ -219,38 +232,36 @@ class NNModel2Loss(Model):
         """
         return data.get_data_NN2Loss()
 
-############ 5. CONVOLUTIONAL NEURAL NETWORK ###############
-# add padding to keep input dimensions
-# a = nn.Conv3d(1, 32, kernel_size=(1, 3, 3), padding=(0, 1, 1))
+############ 5. CONVOLUTIONAL NEURAL NETWORK (3D CONV) ###############
 class CNNModel1Loss(Model):
     """
-    Predicts whether the first image is <= than the second. Only one loss can be applied to the output of this model.
-    Input: (N, 2, 14, 14)
+    Predicts whether the first image is <= than the second.
+    Only one loss can be applied to the output of this model.
+    Input: (N, 1, 2, 14, 14)
     Output: (N, 1)
     """
     def __init__(self,
-        output_size=1, optimizer = optim.Adam, criterion = nn.MSELoss):
+        output_size=1, optimizer=optim.Adam, criterion=nn.MSELoss):
 
         super(CNNModel1Loss, self).__init__()
 
-        self.init_params = {
-            'optimizer': optimizer,
-            'criterion': criterion
-        }
-
         self.feature_extractor = nn.Sequential(
+            # Use batch normalization to normalize the input layer by adjusting and scaling the activations.
+            # Allow each layer of a network to learn by itself a little bit more independently of other layers.
             nn.BatchNorm3d(1),
 
-            # padding 2+2 on x-axis, 2+2 on y-axis
+            # padding 2+2 on x-axis, 2+2 on y-axis (depth=0, height=2, width=2)
+            # add padding to keep input dimensions
             nn.Conv3d(1, 64, kernel_size=(1, 5, 5), padding=(0, 2, 2)),
             nn.ReLU(),
-            nn.BatchNorm3d(64),
+            nn.BatchNorm3d(64), #num_features=64 -> Learnable Parameters
 
             nn.Conv3d(64, 32, kernel_size=(1, 3, 3), padding=(0, 1, 1)),
             nn.ReLU(),
             nn.Dropout(0.3), # dropout = to make it more general and then have a more robust model
             nn.BatchNorm3d(32),
 
+            # Stride controls how the filter convolves around the input volume. -> it is used to avoid to have a fraction in output volume instead of an integer
             # stride, 1 = filter moves on z-axis (1 pixel), shift by 2 on x-axis, shift by 2 on y-axis
             # padding 1+1 on x-axis, 1+1 on y-axis
             nn.Conv3d(32, 8, kernel_size=(1, 3, 3), padding=(0, 1, 1), stride=(1, 2, 2)),
@@ -274,7 +285,7 @@ class CNNModel1Loss(Model):
     def forward(self, X):
         if len(X.shape) == 4:
             # Conv3d expects an input of shape (N, C_{in}, D, H, W)
-            X = X.unsqueeze(1)
+            X = X.unsqueeze(1) # unsqueeze: add a dimension
 
         features = self.feature_extractor(X)
 
@@ -284,38 +295,44 @@ class CNNModel1Loss(Model):
 
     @classmethod
     def reshape_data(cls, data):
+        """
+        Return data as expected by a 3dCNN layer.
+        Output:
+            - train_input, test_input: images -> N x 1 x 2 x 14 x 14
+            - train_target, test_target: class to predict in range[0,1] -> N x 1
+        """
         return data.get_data_3dCNN()
 
+############ Just for report comparison: CONVOLUTIONAL NEURAL NETWORK 1 loss (2D CONV) ###############
 class CNN2dModel1Loss(Model):
     """
     Predicts whether the first image is <= than the second. Only one loss can be applied to the output of this model.
-    Input: (N, 2, 14, 14)
+    Input: (N, 2, 1, 14, 14)
     Output: (N, 1)
     """
     def __init__(self,
-        output_size=1, optimizer = optim.Adam, criterion = nn.MSELoss):
+        output_size=1, optimizer=optim.Adam, criterion=nn.MSELoss):
 
         super(CNN2dModel1Loss, self).__init__()
 
-        self.init_params = {
-            'optimizer': optimizer,
-            'criterion': criterion
-        }
-
         self.feature_extractor = nn.Sequential(
+            # Use batch normalization to normalize the input layer by adjusting and scaling the activations.
+            # Allow each layer of a network to learn by itself a little bit more independently of other layers.
             nn.BatchNorm2d(1),
 
-            # padding 2+2 on x-axis, 2+2 on y-axis
+            # padding 2+2 on x-axis, 2+2 on y-axis (height=2, width=2)
+            # add padding to keep input dimensions
             nn.Conv2d(1, 64, kernel_size=(5, 5), padding=(2, 2)),
             nn.ReLU(),
-            nn.BatchNorm2d(64),
+            nn.BatchNorm2d(64),  #num_features=64 -> Learnable Parameters
 
             nn.Conv2d(64, 32, kernel_size=(3, 3), padding=(1, 1)),
             nn.ReLU(),
             nn.Dropout(0.3), # dropout = to make it more general and then have a more robust model
             nn.BatchNorm2d(32),
 
-            # stride, 1 = filter moves on z-axis (1 pixel), shift by 2 on x-axis, shift by 2 on y-axis
+            # Stride controls how the filter convolves around the input volume. -> it is used to avoid to have a fraction in output volume instead of an integer
+            # stride, filter shift by 2 on x-axis, shift by 2 on y-axis
             # padding 1+1 on x-axis, 1+1 on y-axis
             nn.Conv2d(32, 8, kernel_size=(3, 3), padding=(1, 1), stride=(2, 2)),
             nn.ReLU(),
@@ -336,16 +353,22 @@ class CNN2dModel1Loss(Model):
         self.criterion = criterion()
 
     def forward(self, X):
-        # image must be in 3d
+        # Select features of img1 and img2 and flatten the features for the linear layer in the classifier
         features_l = self.feature_extractor(X[:, 0]).view(X.shape[0], -1)
         features_r = self.feature_extractor(X[:, 1]).view(X.shape[0], -1)
 
-        # flatten the features for the linear layer in the classifier
+        # concat the 2 flatten features
         features = torch.cat([features_l, features_r], dim=1)
         return self.classifier(features)
 
     @classmethod
     def reshape_data(cls, data):
+        """
+        Return data as expected by a 2dCNN layer.
+        Output:
+            - train_input, test_input: images -> N x 2 x 1 x 14 x 14
+            - train_target, test_target: class to predict in range[0,1] -> N x 1
+        """
         return data.get_data_2dCNN()
 
 ############ 6. CONVOLUTIONAL NEURAL NETWORK (2 losses) ###############
