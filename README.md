@@ -21,10 +21,10 @@ Convolutional Neural Network represents the best model with images recognition. 
 Files cross_validation_report.py and BoxPlot_generator.ipynb are made for report purposes.
 
 ### TO RUN THE CODE:
-Ensure that you have in the root of the project the file __dlc_practical_prologue.py__ (we have provided a copy of the file).
-From the root of the project: ``` python main.py ``` (by default we run the model CNN with 2 losses)
+Ensure that you have in the root of the project the file __dlc_practical_prologue.py__.
+From the root of the project: ``` python test.py ``` (by default we run the model CNN with 2 losses).
 
-If you want to try different models, open __main.py__, at line 9 change the variable model with one of these int value:
+If you want to try different models, open __test.py__, at line 9 change the variable model with one of these int value:
 - 1: Linear model
 - 2: Logistic model
 - 3: Neural Network model with 1 loss
